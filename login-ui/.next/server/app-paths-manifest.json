@@ -1,9 +1,0 @@
-{
-  "/registerng/page": "app/registerng/page.js",
-  "/verification/page": "app/verification/page.js",
-  "/App_page/page": "app/App_page/page.js",
-  "/forgot/page": "app/forgot/page.js",
-  "/Personal/page": "app/Personal/page.js",
-  "/withcong/page": "app/withcong/page.js",
-  "/setpass/page": "app/setpass/page.js"
-}
