@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-export async function POST(req: Request) {
+const codeStore = new Map<string, string>();
+
+export async function POST(req: NextRequest) {
   const { email } = await req.json();
 
   const code = Math.floor(10000 + Math.random() * 90000).toString(); // 5-digit code
@@ -17,7 +19,7 @@ export async function POST(req: Request) {
   const mailOptions = {
     from: `"GPS_V2R" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Verify your GPS_V2R account",
+    subject: `Verify your GPS_V2R account - Your Code: ${code}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; background-color: #fcfdff; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
         <h2 style="color: #333; text-align: center; font-size: 20px; margin-bottom: 16px;">Email Verification</h2>
@@ -40,10 +42,27 @@ export async function POST(req: Request) {
   };
 
   try {
+    // ✅ Save code in memory store
+    codeStore.set(email, code);
+
+    // ✅ Send email
     await transporter.sendMail(mailOptions);
-    return NextResponse.json({ success: true, code }); // Remove code from production response
+
+    // ✅ Create response and set cookie
+    const res = NextResponse.json({ success: true });
+
+    // Set `register_email` cookie
+    res.cookies.set("register_email", email, {
+      httpOnly: true,
+      maxAge: 60 * 10, // 10 minutes (code lifetime)
+      path: "/",
+    });
+
+    return res;
   } catch (error) {
     console.error("Mail send error:", error);
-    return NextResponse.json({ success: false, error });
+    return NextResponse.json({ success: false, error: "Failed to send verification code" });
   }
 }
+
+export { codeStore };

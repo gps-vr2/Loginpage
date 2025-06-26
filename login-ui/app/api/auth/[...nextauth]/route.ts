@@ -1,7 +1,10 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { PrismaClient } from "@prisma/client";
 
-const handler = NextAuth({
+const prisma = new PrismaClient();
+
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -9,6 +12,39 @@ const handler = NextAuth({
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
-});
+
+  callbacks: {
+    async signIn({ user }) {
+      // Always allow sign-in
+      return true;
+    },
+
+    async session({ session }) {
+      const email = session?.user?.email;
+      if (!email) return session;
+
+      const dbUser = await prisma.login.findUnique({ where: { email } });
+
+      if (dbUser) {
+        session.user.existsInDb = true;
+        session.user.name = dbUser.name;
+    
+        session.user.congregationNumber = dbUser.congregationNumber;
+      } else {
+        session.user.existsInDb = false;
+      }
+
+      return session;
+    },
+
+    async redirect({ baseUrl, url }) {
+      // Force all redirects to a custom page that sets a cookie
+      // This lets frontend determine what to do
+      return `${baseUrl}/google-redirect`;
+    },
+  },
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
