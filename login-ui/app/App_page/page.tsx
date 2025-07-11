@@ -8,9 +8,18 @@ const App = () => {
   const [congNumber, setCongNumber] = useState("");
 
   useEffect(() => {
+    // Check if user has previously selected an app
+    const lastApp = localStorage.getItem("lastApp");
+    if (lastApp) {
+      router.push(lastApp);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    // Fetch user details
     fetch("/api/getuser", {
       method: "GET",
-       credentials: "include", 
+      credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
@@ -28,7 +37,7 @@ const App = () => {
 
         {/* Left Section */}
         <div className="w-full h-full md:w-1/2 bg-[#c2d5d4] flex items-center justify-center">
-          <div className="relative w-[95%] max-w-[340px]  bg-[#fcfdff] rounded-lg shadow-md p-6 vh-[95%] flex flex-col justify-start">
+          <div className="relative w-[95%] max-w-[340px] bg-[#fcfdff] rounded-lg shadow-md p-6 vh-[95%] flex flex-col justify-start">
 
             <button
               onClick={() => router.back()}
@@ -37,7 +46,7 @@ const App = () => {
               Back
             </button>
 
-            {/* Welcome Section */}
+            {/* Welcome */}
             <div className="mb-6 text-center">
               <h2
                 className={`font-bold text-gray-900 mb-1 transition-all duration-200 ${
@@ -61,10 +70,10 @@ const App = () => {
             {/* App Entries */}
             <div className="flex flex-col gap-4">
               {[
-                { img: "/logo_app1.png", title: "APP1 - DESC" },
+                { img: "/logo_app1.png", title: "APP1 - DESC", link: "https://gp-sapp1.vercel.app/" },
                 { img: "/logo_app2.png", title: "APP2 - DESC", link: "https://gp-sapp2.vercel.app" },
                 { img: "/logo1.png", title: "APP3 - DESC" },
-                { img: "/logo1.png", title: "ADMIN LOGIN" },
+                { img: "/admin.png", title: "ADMIN LOGIN" },
               ].map((app, idx) => (
                 <div
                   key={idx}
@@ -77,22 +86,36 @@ const App = () => {
                   />
                   <div className="text-right">
                     <p className="text-black text-sm font-medium mb-1">{app.title}</p>
-                    <button className="w-[80px] h-[28px] bg-[#7370e4] hover:bg-[#5e5ccf] rounded text-white italic text-xs transition-colors duration-300"
-                      onClick={() => {if (app.link) router.push(app.link);}}>
+                    <button
+                      className="w-[80px] h-[28px] bg-[#7370e4] hover:bg-[#5e5ccf] rounded text-white italic text-xs transition-colors duration-300"
+                      onClick={() => {
+                        if (app.link) {
+                          // ✅ Save chosen app to localStorage
+                          localStorage.setItem("lastApp", app.link);
+                          router.push(app.link);
+                        }
+                      }}
+                    >
                       Launch
                     </button>
                   </div>
                 </div>
               ))}
             </div>
+
             <div className="mt-auto pt-2 text-center">
-  <button
-    onClick={() => router.push("/")}
-    className="text-sm text-[#7370e4] hover:underline transition-all duration-200"
-  >
-    Use another account
-  </button>
-</div>
+              <button
+                onClick={() => {
+                  // Remove saved app so user can choose next time
+                  localStorage.removeItem("lastApp");
+                  router.push("/");
+                }}
+                className="text-sm text-[#7370e4] hover:underline transition-all duration-200"
+              >
+                Use another account
+              </button>
+            </div>
+
           </div>
         </div>
 
@@ -103,9 +126,8 @@ const App = () => {
             alt="Side Visual"
             className="w-full h-full object-cover"
           />
-          
         </div>
-        
+
       </div>
     </div>
   );

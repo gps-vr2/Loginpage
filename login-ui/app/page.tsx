@@ -1,19 +1,25 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react"; // install with: npm install lucide-react
 
 const Login = () => {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // useRef for cleaner input access
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const email = (document.getElementById("email") as HTMLInputElement).value;
-    const password = (document.getElementById("password") as HTMLInputElement).value;
+    const email = emailRef.current?.value || "";
+    const password = passwordRef.current?.value || "";
 
     const res = await fetch("/api/login", {
       method: "POST",
@@ -30,10 +36,9 @@ const Login = () => {
 
     const lastLoginDate = new Date(data.lastLoginDate);
     const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
-
-  
- 
+    const diffInDays = Math.floor(
+      (now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     if (diffInDays > 10) {
       setErrorMsg("Last connection was over 10 days ago. Redirecting...");
@@ -45,7 +50,7 @@ const Login = () => {
 
   const handleGoogleSignIn = () => {
     localStorage.setItem("loginEmail", "");
-    signIn("google", {callbackUrl: "http://localhost:3000/Personal"});
+    signIn("google", { callbackUrl: "http://localhost:3000/Personal" });
   };
 
   return (
@@ -54,7 +59,10 @@ const Login = () => {
 
         {/* Left Section */}
         <div className="w-full h-full md:w-1/2 bg-[#c2d5d4] flex items-center justify-center">
-          <form onSubmit={handleLogin} className="w-[95%] max-w-[340px] bg-[#fcfdff] rounded-lg shadow-md p-6">
+          <form
+            onSubmit={handleLogin}
+            className="w-[95%] max-w-[340px] bg-[#fcfdff] rounded-lg shadow-md p-6"
+          >
             <h2 className="text-center font-bold text-lg text-black mb-5">Login</h2>
 
             <button
@@ -72,33 +80,58 @@ const Login = () => {
               <div className="w-[40%] h-[1px] bg-[#b1b2b5]" />
             </div>
 
-            <label htmlFor="email" className="text-sm text-[#0b0b0b] font-medium mb-1 block">Email</label>
+            <label
+              htmlFor="email"
+              className="text-sm text-[#0b0b0b] font-medium mb-1 block"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
+              ref={emailRef}
               placeholder="Enter a registered email"
               className="w-full placeholder:text-[12px] bg-[#f6f6f6] placeholder:text-[#666666] outline outline-1 outline-[#d1d1d1] rounded-md px-3 py-2 text-black mb-3 text-[12px]"
               required
             />
 
-            <label htmlFor="password" className="text-sm text-[#0b0b0b] font-medium mb-1 block">Password</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Enter your password"
-              className="w-full placeholder:text-[12px] bg-[#f6f6f6] placeholder:text-[#666666] outline outline-1 outline-[#d1d1d1] rounded-md px-3 py-2 text-black mb-3"
-              required
-            />
+            <label
+              htmlFor="password"
+              className="text-sm text-[#0b0b0b] font-medium mb-1 block"
+            >
+              Password
+            </label>
+            <div className="relative mb-3">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                ref={passwordRef}
+                placeholder="Enter your password"
+                className="w-full placeholder:text-[12px] bg-[#f6f6f6] placeholder:text-[#666666] outline outline-1 outline-[#d1d1d1] rounded-md px-3 py-2 text-black"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-2 text-gray-600 hover:text-gray-800 cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <div className="flex justify-between items-center text-sm mb-4">
               <label className="flex items-center gap-2 text-[#0b0b0b]">
                 <input type="checkbox" className="w-4 h-4" />
                 Remember me
               </label>
-              <Link href="/forgot" className="text-[#7573d2] hover:underline">Forgot password?</Link>
+              <Link href="/forgot" className="text-[#7573d2] hover:underline">
+                Forgot password?
+              </Link>
             </div>
 
-            {errorMsg && <p className="text-xs text-red-600 text-center mb-3">{errorMsg}</p>}
+            {errorMsg && (
+              <p className="text-xs text-red-600 text-center mb-3">{errorMsg}</p>
+            )}
 
             <button
               type="submit"
@@ -108,7 +141,10 @@ const Login = () => {
             </button>
 
             <p className="text-center text-sm text-black">
-              No account? <Link href="/registerng" className="text-[#7573d2] hover:underline">Create one</Link>
+              No account?{" "}
+              <Link href="/registerng" className="text-[#7573d2] hover:underline">
+                Create one
+              </Link>
             </p>
           </form>
         </div>
