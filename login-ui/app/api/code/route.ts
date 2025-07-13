@@ -1,7 +1,7 @@
+// app/api/code/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-
-const codeStore = new Map<string, string>();
+import { codeStore } from "./codeStore";  // import the shared code store
 
 export async function POST(req: NextRequest) {
   const { email } = await req.json();
@@ -42,19 +42,17 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    // ✅ Save code in memory store
+    // Save code in memory
     codeStore.set(email, code);
 
-    // ✅ Send email
+    // Send email
     await transporter.sendMail(mailOptions);
 
-    // ✅ Create response and set cookie
+    // Create response & set cookie
     const res = NextResponse.json({ success: true });
-
-    // Set `register_email` cookie
     res.cookies.set("register_email", email, {
       httpOnly: true,
-      maxAge: 60 * 10, // 10 minutes (code lifetime)
+      maxAge: 60 * 10, // 10 minutes
       path: "/",
     });
 
@@ -64,5 +62,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to send verification code" });
   }
 }
-
-export { codeStore };
