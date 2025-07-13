@@ -14,7 +14,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 
   callbacks: {
-    async signIn({ user }) {
+    async signIn() {
       // Always allow sign-in
       return true;
     },
@@ -28,7 +28,6 @@ export const authOptions: NextAuthOptions = {
       if (dbUser) {
         session.user.existsInDb = true;
         session.user.name = dbUser.name;
-    
         session.user.congregationNumber = dbUser.congregationNumber;
       } else {
         session.user.existsInDb = false;
@@ -37,9 +36,8 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    async redirect({ baseUrl, url }) {
+    async redirect({ baseUrl }) {
       // Force all redirects to a custom page that sets a cookie
-      // This lets frontend determine what to do
       return `${baseUrl}/google-redirect`;
     },
   },

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const Verify = () => {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ const Verify = () => {
         const [key, value] = current.split("=");
         acc[key] = value;
         return acc;
-      }, {} as Record<string, string>);
+      }, {});
       return cookies[name];
     };
 
@@ -122,8 +122,7 @@ const Verify = () => {
                   <br />
                   Please enter it below.
                 </>
-              )}
-              {" "}
+              )}{" "}
               <span
                 className="text-[#7573d2] hover:underline cursor-pointer"
                 onClick={handleResend}
@@ -173,11 +172,12 @@ const Verify = () => {
         </div>
 
         {/* Right Section */}
-        <div className="hidden md:block md:w-1/2 h-full">
-          <img
+        <div className="hidden md:block md:w-1/2 h-full relative">
+          <Image
             src="/logo1.png"
             alt="Verification Visual"
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
       </div>

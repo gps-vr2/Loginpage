@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 
 const Forgot = () => {
   const router = useRouter();
@@ -10,20 +12,19 @@ const Forgot = () => {
   const [loading, setLoading] = useState(false);
 
   // Prefill email on load
-useEffect(() => {
-  const fromEdit = sessionStorage.getItem("fromEditEmail");
-  if (fromEdit === "true") {
-    const storedEmail =
-      localStorage.getItem("reset_email") ||
-      localStorage.getItem("loginEmail") ||
-      "";
-    setEmail(storedEmail);
-    sessionStorage.removeItem("fromEditEmail"); // clear after using
-  } else {
-    setEmail(""); // ensure empty for all other cases
-  }
-}, []);
-
+  useEffect(() => {
+    const fromEdit = sessionStorage.getItem("fromEditEmail");
+    if (fromEdit === "true") {
+      const storedEmail =
+        localStorage.getItem("reset_email") ||
+        localStorage.getItem("loginEmail") ||
+        "";
+      setEmail(storedEmail);
+      sessionStorage.removeItem("fromEditEmail"); // clear after using
+    } else {
+      setEmail(""); // ensure empty for all other cases
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +43,7 @@ useEffect(() => {
       if (data.exists) {
         // Save email to localStorage
         localStorage.setItem("reset_email", email);
-        localStorage.setItem("loginEmail", email); // update this too
+        localStorage.setItem("loginEmail", email);
         router.push("/verification");
       } else {
         setError("No account found with this email.");
@@ -58,7 +59,6 @@ useEffect(() => {
   return (
     <div className="fixed inset-0 w-screen h-screen bg-gray-100 overflow-hidden flex items-center justify-center">
       <div className="flex flex-col md:flex-row w-full h-full max-w-none bg-white shadow-lg overflow-hidden">
-
         {/* Left Section (Form) */}
         <div className="w-full h-full md:w-1/2 bg-[#c2d5d4] flex items-center justify-center">
           <form
@@ -97,19 +97,21 @@ useEffect(() => {
 
             <p className="text-center text-sm text-black">
               Back to{" "}
-              <a href="/" className="text-[#7573d2] hover:underline">
+              <Link href="/" className="text-[#7573d2] hover:underline">
                 Login
-              </a>
+              </Link>
             </p>
           </form>
         </div>
 
         {/* Right Section (Image) */}
-        <div className="hidden md:block md:w-1/2 h-full">
-          <img
+        <div className="hidden md:block md:w-1/2 h-full relative">
+          <Image
             src="/logo1.png"
             alt="Forgot Visual"
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            priority
           />
         </div>
       </div>

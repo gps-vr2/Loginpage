@@ -8,14 +8,6 @@ const App = () => {
   const [congNumber, setCongNumber] = useState("");
 
   useEffect(() => {
-    // Check if user has previously selected an app
-    const lastApp = localStorage.getItem("lastApp");
-    if (lastApp) {
-      router.push(lastApp);
-    }
-  }, [router]);
-
-  useEffect(() => {
     // Fetch user details
     fetch("/api/getuser", {
       method: "GET",
@@ -90,8 +82,6 @@ const App = () => {
                       className="w-[80px] h-[28px] bg-[#7370e4] hover:bg-[#5e5ccf] rounded text-white italic text-xs transition-colors duration-300"
                       onClick={() => {
                         if (app.link) {
-                          // ✅ Save chosen app to localStorage
-                          localStorage.setItem("lastApp", app.link);
                           router.push(app.link);
                         }
                       }}
@@ -106,8 +96,6 @@ const App = () => {
             <div className="mt-auto pt-2 text-center">
               <button
                 onClick={() => {
-                  // Remove saved app so user can choose next time
-                  localStorage.removeItem("lastApp");
                   router.push("/");
                 }}
                 className="text-sm text-[#7370e4] hover:underline transition-all duration-200"
