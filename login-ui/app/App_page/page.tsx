@@ -62,7 +62,7 @@ const App = () => {
             {/* App Entries */}
             <div className="flex flex-col gap-4">
               {[
-                { img: "/logo_app1.png", title: "APP1 - DESC", link: "https://gp-sapp1.vercel.app/" },
+                { img: "/logo_app1.png", title: "APP1 - DESC", link: "https://gpsapp1.vercel.app/" },
                 { img: "/logo_app2.png", title: "APP2 - DESC", link: "https://gp-sapp2.vercel.app" },
                 { img: "/logo1.png", title: "APP3 - DESC" },
                 { img: "/admin.png", title: "ADMIN LOGIN" },
