@@ -1,36 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
+// Fix the parameter typing here
 export async function GET(
   req: NextRequest,
   context: { params: { number: string } }
 ) {
-  const number = context.params.number;
+  const { number } = context.params
 
   try {
-    const congregation = await prisma.login.findFirst({
-      where: { congregationNumber: number },
-      select: {
-        congregationNumber: true,
-        congregationName: true,
+    const congregation = await prisma.congregation.findUnique({
+      where: {
+        idCongregation: parseInt(number),
       },
-    });
+    })
 
     if (!congregation) {
-      return NextResponse.json(
-        { error: "Congregation not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: 'Congregation not found' }, { status: 404 })
     }
 
-    return NextResponse.json(congregation);
+    return NextResponse.json(congregation)
   } catch (error) {
-    console.error("Error fetching congregation:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error('Error fetching congregation:', error)
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
 }

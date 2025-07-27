@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "../auth/authOptions"; // ✅ correct path
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -21,7 +21,7 @@ export async function GET() {
     path: "/",
     maxAge: 60 * 60 * 24, // 1 day
   });
-  
-console.log("User info retrieved:", { email });
+
+  console.log("User info retrieved:", { email });
   return res;
 }

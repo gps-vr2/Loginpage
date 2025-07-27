@@ -1,6 +1,6 @@
 // app/api/verify-code/route.ts
 import { NextResponse } from "next/server";
-import { codeStore } from "../code/route"; // ⚠ import from shared store
+import { codeStore } from "../code/codeStore"; // ✅ Correct import path
 
 export async function POST(req: Request) {
   const { email, code } = await req.json();
