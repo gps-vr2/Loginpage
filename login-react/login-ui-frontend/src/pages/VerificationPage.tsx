@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = "http://localhost:4000/api";
+const API_URL = "https://loginpage-1.vercel.app/api";
 
 const VerificationPage = () => {
   const navigate = useNavigate();

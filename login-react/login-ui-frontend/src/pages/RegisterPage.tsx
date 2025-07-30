@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = "http://localhost:4000/api";
+const API_URL = "https://loginpage-1.vercel.app/api";
 
 // Define styles as objects to match the login page UI
 const styles: { [key: string]: CSSProperties } = {

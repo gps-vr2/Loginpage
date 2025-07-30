@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 
-const API_URL = "http://localhost:4000/api";
+const API_URL = "https://loginpage-1.vercel.app/api";
 
 const SetPasswordPage = () => {
   const navigate = useNavigate();

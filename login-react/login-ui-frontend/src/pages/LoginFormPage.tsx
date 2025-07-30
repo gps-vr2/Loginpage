@@ -5,7 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 
-const API_URL = "http://localhost:4000/api";
+const API_URL = "https://loginpage-1.vercel.app/api";
 
 // Define styles as objects to match the target UI exactly
 const styles: { [key: string]: CSSProperties } = {
