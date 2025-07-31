@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 const ProtectedRoute = () => {
   const { user, token } = useAuth();
 
-  // If there's no token or user, redirect to the login page
+  // If  there's no token or user, redirect to the login page
   if (!token || !user) {
     return <Navigate to="/" replace />;
   }
