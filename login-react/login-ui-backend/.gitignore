@@ -1,25 +1,146 @@
+# Compiled output
+/dist
+/build
+/out
+/tmp
+/coverage
+
+# Dependency directories
+/node_modules
+/jspm_packages/
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment variables
 .env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+.vscode/
+!.vscode/extensions.json  # Keep this if you want to share recommended extensions
+.idea/                    # IntelliJ IDEA
+*.suo                     # Visual Studio
+*.ntvs* # Node.js Tools for Visual Studio
+*.njsproj                 # Node.js Project files
+*.sln                     # Visual Studio Solution files
+*.sw?                     # Vim swap files
+.DS_Store                 # macOS specific
+Thumbs.db                 # Windows specific
+desktop.ini               # Windows specific
+
+# OS generated files
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.localized
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Misc
+*.zip
+*.rar
+*.7z
+*.gz
+*.tar
+*.bak
+*.orig
+*.swp
+*.swo
+*.tmp
+*.log
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+.settings/
+*.komodoproject
+
+# Specific to Node.js
+# npm package manager cache
+.npm/
+
+# macOS folder attribute files
+.localized
+
+# Yarn specific
+.yarn/
+.pnp.*
+
+# Visual Studio Code specific
+.vscode-test/
+
+# For front-end frameworks
+# Angular
+/src/app/*.js.map
+/src/app/*.css.map
+/src/app/*.js
+/src/app/*.css
+
+# React
+build/
+
+# Vue
+dist/
+
+# Svelte
+.svelte-kit/
+build/
+
+# Next.js
+.next/
+
+# Nuxt.js
+.nuxt/
+
+# Jekyll
+_site/
+.jekyll-cache/
+
+# Gatsby
+.cache/
+public/
+
+# Storybook
+.storybook/out/
+
+# Other common development tools
+.grunt/
+.nyc_output/
+bower_components/
+component/
+
+# Tests
+/coverage/
+
+# VS Code Live Share
+.vsls/
+
+# User-specific files that may contain sensitive data
+# config.js # Consider if your config.js has sensitive info and is not generic
+
+# Docker
+.dockerignore
+Dockerfile.backup
+docker-compose.backup
+*.pem
+*.key
+
+# Serverless Framework
+.serverless/
+.webpack/
+
+# Amplify
+amplify/.config/local-env-info.json
+amplify/backend/amplify-meta.json
+amplify/#current-cloud-backend
+amplify/backend/awscloudformation/
+build-artifacts/
