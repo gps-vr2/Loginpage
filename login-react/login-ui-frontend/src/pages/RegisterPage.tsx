@@ -1,6 +1,4 @@
-import { useState } from "react";
-import type { CSSProperties } from "react";
-
+import React, { useState, CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 
-
 const API_URL = "https://loginpage-1.vercel.app/api";
 
 const styles = {
@@ -15,7 +14,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     fontFamily: "system-ui, sans-serif",
-  } as const,
+  },
   card: {
     display: "flex",
     width: "100%",
@@ -27,32 +26,32 @@ const styles = {
     borderRadius: "0.5rem",
     overflow: "hidden",
     margin: "1rem",
-  } as const,
+  },
   formContainer: {
     width: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "2rem",
-  } as const,
+  },
   formWrapper: {
     width: "100%",
     maxWidth: "340px",
-  } as const,
+  },
   title: {
     fontSize: "1.875rem",
     fontWeight: "bold",
     color: "#111827",
     marginBottom: "1.5rem",
     textAlign: "center",
-  } as const,
+  },
   label: {
     display: "block",
     fontSize: "0.875rem",
     fontWeight: 500,
     color: "#374151",
     marginBottom: "0.25rem",
-  } as const,
+  },
   input: {
     width: "100%",
     backgroundColor: "#f9fafb",
@@ -62,14 +61,14 @@ const styles = {
     fontSize: "0.875rem",
     color: "#1f2937",
     marginBottom: "1rem",
-  } as const,
+  },
   errorText: {
     fontSize: "0.75rem",
     color: "#ef4444",
     marginTop: "-0.5rem",
     marginBottom: "0.5rem",
     textAlign: "center",
-  } as const,
+  },
   submitButton: {
     width: "100%",
     backgroundColor: "#8B5CF6",
@@ -81,16 +80,16 @@ const styles = {
     cursor: "pointer",
     marginTop: "0.5rem",
     transition: "background-color 0.3s",
-  } as const,
+  },
   imageContainer: {
     width: "50%",
     display: "block",
-  } as const,
+  },
   image: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
-  } as const,
+  },
 };
 
 const CompleteProfilePage = () => {

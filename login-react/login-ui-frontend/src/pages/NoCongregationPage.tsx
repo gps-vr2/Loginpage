@@ -105,7 +105,7 @@ const styles = {
     height: "100%",
     objectFit: "cover",
   },
-} as const;
+};
 
 const NoCongregationPage = () => {
   const navigate = useNavigate();

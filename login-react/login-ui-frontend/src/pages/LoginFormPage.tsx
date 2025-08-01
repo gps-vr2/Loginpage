@@ -1,6 +1,4 @@
-import { useState, useRef } from "react";
-import type { CSSProperties } from "react";
-
+import React, { useState, useRef, CSSProperties } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";

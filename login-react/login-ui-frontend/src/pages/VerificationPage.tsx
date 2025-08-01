@@ -12,6 +12,7 @@ const VerificationPage = () => {
   const [resendText, setResendText] = useState("Send code");
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [codeSentOnce, setCodeSentOnce] = useState(false);
 
   useEffect(() => {
     if (!email) {
@@ -24,6 +25,7 @@ const VerificationPage = () => {
     try {
       await axios.post(`${API_URL}/code`, { email });
       setResendText("Code sent!");
+      setCodeSentOnce(true);
       setTimeout(() => setResendText("Resend code?"), 3000);
     } catch (err) {
       console.error("Failed to send code:", err);
@@ -86,9 +88,7 @@ const VerificationPage = () => {
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
-                  ref={(el) => {
-                    inputRefs.current[i] = el;
-                  }}
+                  ref={(el) => (inputRefs.current[i] = el)}
                   onInput={(e) => handleInput(e, i)}
                   style={styles.codeInput}
                 />
@@ -122,14 +122,13 @@ const VerificationPage = () => {
   );
 };
 
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
   container: {
     display: "flex",
     height: "100vh",
     width: "100vw",
     backgroundColor: "#f5f7fb",
     overflow: "hidden",
-    fontFamily: "system-ui, sans-serif",
   },
   card: {
     flex: 1,
@@ -148,7 +147,7 @@ const styles = {
     boxShadow: "0 8px 20px rgba(0, 0, 0, 0.1)",
   },
   title: {
-    textAlign: "center" as const,
+    textAlign: "center",
     fontSize: "20px",
     fontWeight: 600,
     marginBottom: "12px",
@@ -156,7 +155,7 @@ const styles = {
   },
   subtitle: {
     fontSize: "14px",
-    textAlign: "center" as const,
+    textAlign: "center",
     marginBottom: "20px",
     color: "#444",
     lineHeight: "1.5",
@@ -169,7 +168,7 @@ const styles = {
   codeInput: {
     width: "45px",
     height: "48px",
-    textAlign: "center" as const,
+    textAlign: "center",
     border: "1px solid #d1d1d1",
     borderRadius: "8px",
     fontSize: "18px",
@@ -177,7 +176,7 @@ const styles = {
     color: "#000",
   },
   error: {
-    textAlign: "center" as const,
+    textAlign: "center",
     color: "#e74c3c",
     fontSize: "13px",
     marginBottom: "16px",
@@ -196,7 +195,7 @@ const styles = {
   },
   resend: {
     fontSize: "13px",
-    textAlign: "center" as const,
+    textAlign: "center",
     marginTop: "15px",
     color: "#555",
   },
@@ -214,8 +213,13 @@ const styles = {
   image: {
     width: "100%",
     height: "100%",
-    objectFit: "cover" as const,
+    objectFit: "cover",
   },
-} as const;
+  "@media (min-width: 768px)": {
+    imageSection: {
+      display: "block",
+    },
+  },
+};
 
 export default VerificationPage;
