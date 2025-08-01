@@ -8,7 +8,7 @@ const API_URL = "https://loginpage-1.vercel.app/api";
 const MainAppPage = () => {
   const navigate = useNavigate();
   const { user, token, logout } = useAuth();
-  const [userName, setUserName] = useState(user?.name || "Guest");
+ 
   const [congNumber, setCongNumber] = useState("");
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const MainAppPage = () => {
           <button onClick={() => navigate(-1)} style={styles.backBtn}>← Back</button>
 
           <div style={styles.header}>
-            <h2 style={styles.title}>Welcome, {userName}</h2>
+            <h2 style={styles.title}>Welcome, {user?.name}</h2>
             <p style={styles.subText}>
               Your Congregation Number:{" "}
               <span style={styles.highlight}>{congNumber || "Loading..."}</span>
