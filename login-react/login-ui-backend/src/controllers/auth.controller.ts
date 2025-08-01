@@ -96,7 +96,7 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
   const { user, isNewUser } = req.user;
   const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, process.env.JWT_SECRET as string, { expiresIn: isNewUser ? '1h' : '7d' });
-  const frontendUrl = process.env.FRONTEND_URL || 'https://login-ui-eight.vercel.app';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://gps-loginpage.vercel.app/';
   res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
 };
 
