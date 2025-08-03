@@ -96,8 +96,7 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
   const { user, isNewUser } = req.user;
   const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, process.env.JWT_SECRET as string, { expiresIn: isNewUser ? '1h' : '7d' });
-  // CORRECTED: Using your production frontend URL from your code, with the extra space removed.
-  const frontendUrl = process.env.FRONTEND_URL || 'https://gps-loginpage.vercel.app';
+  const frontendUrl = process.env.FRONTEND_URL || ' https://gps-loginpage.vercel.app';
   res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
 };
 
@@ -200,32 +199,14 @@ export const createCongregationAndUser = async (req: AuthenticatedRequest, res: 
     const congNumInt = parseInt(congregationNumber, 10);
     const existingCongregation = await prisma.congregation.findUnique({ where: { idCongregation: congNumInt } });
     if (existingCongregation) return res.status(409).json({ error: 'A congregation with this number already exists.' });
-    
-    // Use an interactive transaction for dependent writes.
-    const newUser = await prisma.$transaction(async (tx) => {
-      // 1. Create the congregation first.
-      const newCongregation = await tx.congregation.create({
-        data: {
-          idCongregation: congNumInt,
-          name: congregationName,
-          language: language,
-        },
-      });
-
-      // 2. Then create the user, using the ID from the newly created congregation.
-      const user = await tx.login.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          whatsapp,
-          congregationNumber: newCongregation.idCongregation,
-          googleSignIn: false,
-        },
-      });
-      return user;
-    });
-    
+    const [newCongregation, newUser] = await prisma.$transaction([
+      prisma.congregation.create({
+        data: { idCongregation: congNumInt, name: congregationName, language: language },
+      }),
+      prisma.login.create({
+        data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congNumInt, googleSignIn: false },
+      }),
+    ]);
     const sessionToken = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
     return res.status(201).json({ message: 'Congregation and user created successfully.', token: sessionToken });
   } catch (error) {
