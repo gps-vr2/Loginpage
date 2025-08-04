@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 
-
 const API_URL = "https://loginpage-1.vercel.app/api";
 
 const styles = {
@@ -103,9 +102,25 @@ const CompleteProfilePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [whatsappError, setWhatsappError] = useState("");
+  const [congNumError, setCongNumError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setWhatsappError("");
+    setCongNumError("");
+
+    if (whatsapp.length < 8 || whatsapp.length > 15) {
+      setWhatsappError("Enter a valid WhatsApp number.");
+      return;
+    }
+
+    if (congNum.length !== 6) {
+      setCongNumError("Congregation number must be exactly 6 digits.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -136,6 +151,13 @@ const CompleteProfilePage = () => {
     }
   };
 
+  // Prevent non-digit input
+  const handleNumberInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!/[0-9]/.test(e.key) && e.key !== "Backspace" && e.key !== "Tab") {
+      e.preventDefault();
+    }
+  };
+
   return (
     <>
       <title>Complete Profile</title>
@@ -157,33 +179,50 @@ const CompleteProfilePage = () => {
 
               <label style={styles.label}>WhatsApp Number</label>
               <input
-                type="tel"
+                type="text"
                 value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
+                onChange={(e) =>
+                  setWhatsapp(e.target.value.replace(/\D/g, ""))
+                }
+                onKeyDown={handleNumberInput}
                 placeholder="Enter WhatsApp number"
                 style={styles.input}
                 required
               />
+              {whatsappError && <p style={styles.errorText}>{whatsappError}</p>}
 
               <label style={styles.label}>Congregation Number</label>
               <input
                 type="text"
                 value={congNum}
-                onChange={(e) => setCongNum(e.target.value)}
-                placeholder="Enter Congregation Number"
+                maxLength={6}
+                onChange={(e) =>
+                  setCongNum(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                onKeyDown={handleNumberInput}
+                placeholder="Enter 6-digit Congregation Number"
                 style={styles.input}
                 required
               />
+              {congNumError && <p style={styles.errorText}>{congNumError}</p>}
 
               {error && <p style={styles.errorText}>{error}</p>}
 
-              <button type="submit" style={styles.submitButton} disabled={isSubmitting}>
+              <button
+                type="submit"
+                style={styles.submitButton}
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Submitting..." : "Continue"}
               </button>
             </form>
           </div>
           <div style={styles.imageContainer}>
-            <img src="/logo1.png" alt="Background Illustration" style={styles.image} />
+            <img
+              src="/logo1.png"
+              alt="Background Illustration"
+              style={styles.image}
+            />
           </div>
         </div>
       </div>
