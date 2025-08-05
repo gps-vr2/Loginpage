@@ -195,12 +195,12 @@ const CompleteProfilePage = () => {
               <input
                 type="text"
                 value={congNum}
-                maxLength={6}
+                maxLength={7}
                 onChange={(e) =>
-                  setCongNum(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  setCongNum(e.target.value.replace(/\D/g, "").slice(0, 7))
                 }
                 onKeyDown={handleNumberInput}
-                placeholder="Enter 6-digit Congregation Number"
+                placeholder="Enter 7-digit Congregation Number"
                 style={styles.input}
                 required
               />
