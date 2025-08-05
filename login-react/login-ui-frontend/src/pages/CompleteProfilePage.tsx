@@ -200,7 +200,7 @@ const CompleteProfilePage = () => {
                   setCongNum(e.target.value.replace(/\D/g, "").slice(0, 7))
                 }
                 onKeyDown={handleNumberInput}
-                placeholder="Enter 6-digit Congregation Number"
+                placeholder="Enter 7-digit Congregation Number"
                 style={styles.input}
                 required
               />
