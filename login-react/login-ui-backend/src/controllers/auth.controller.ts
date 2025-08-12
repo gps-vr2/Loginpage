@@ -189,8 +189,8 @@ export const createCongregationAndUser = async (req: AuthenticatedRequest, res: 
   if (!name || !whatsapp || !congregationNumber || !congregationName || !language) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
-  if (!/^\d{6}$/.test(congregationNumber?.toString())) {
-      return res.status(400).json({ error: "Congregation number must be exactly 6 digits." });
+  if (!/^\d{7}$/.test(congregationNumber?.toString())) {
+      return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
   }
   if (congregationName.trim().length < 3) {
       return res.status(400).json({ error: "Congregation name must be at least 3 characters." });
