@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useAuth } from "../contexts/AuthContext";
 
 const API_URL = "https://loginpage-1.vercel.app/api";
@@ -10,7 +10,7 @@ const SetPasswordPage = () => {
   const location = useLocation();
   const { login } = useAuth();
 
-  const email = location.state?.email;
+  const email = location.state?.email as string | undefined;
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -24,7 +24,7 @@ const SetPasswordPage = () => {
     }
   }, [email, navigate]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -45,7 +45,8 @@ const SetPasswordPage = () => {
 
       login(token);
       navigate("/complete-profile");
-    } catch (err) {
+    } catch (error) {
+      const err = error as AxiosError<{ error: string }>;
       const message = err.response?.data?.error || "Something went wrong.";
       setErrorMsg(message);
     }
