@@ -14,18 +14,19 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     fontFamily: "system-ui, sans-serif",
+    padding: "1rem",
+    boxSizing: "border-box",
   },
   card: {
     display: "flex",
     width: "100%",
     maxWidth: "960px",
-    height: "600px",
     backgroundColor: "white",
     boxShadow:
       "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
     borderRadius: "0.5rem",
     overflow: "hidden",
-    margin: "1rem",
+    flexDirection: "row",
   },
   formContainer: {
     width: "50%",
@@ -33,6 +34,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     padding: "2rem",
+    boxSizing: "border-box",
   },
   formWrapper: {
     width: "100%",
@@ -67,6 +69,7 @@ const styles = {
     fontSize: "0.875rem",
     color: "#1f2937",
     marginBottom: "1rem",
+    boxSizing: "border-box", // ✅ prevents cutting on mobile
   },
   disabledInput: {
     width: "100%",
@@ -76,6 +79,7 @@ const styles = {
     fontSize: "0.875rem",
     color: "#6b7280",
     marginBottom: "1rem",
+    boxSizing: "border-box",
   },
   button: {
     width: "100%",
@@ -105,6 +109,18 @@ const styles = {
     height: "100%",
     objectFit: "cover",
   },
+  // ✅ Mobile adjustments
+  mobileCard: {
+    flexDirection: "column",
+    height: "auto",
+  },
+  mobileFormContainer: {
+    width: "100%",
+    padding: "1.5rem",
+  },
+  hideOnMobile: {
+    display: "none",
+  },
 } as const;
 
 const NoCongregationPage = () => {
@@ -118,6 +134,7 @@ const NoCongregationPage = () => {
   const [language, setLanguage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const toProperCase = (text: string) =>
     text
@@ -131,6 +148,9 @@ const NoCongregationPage = () => {
       console.error("Missing user data. Redirecting to complete profile.");
       navigate("/complete-profile");
     }
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [name, whatsapp, congregationNumber, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,8 +192,18 @@ const NoCongregationPage = () => {
     <>
       <title>Congregation Details</title>
       <div style={styles.container}>
-        <div style={styles.card}>
-          <div style={styles.formContainer}>
+        <div
+          style={{
+            ...styles.card,
+            ...(isMobile ? styles.mobileCard : {}),
+          }}
+        >
+          <div
+            style={{
+              ...styles.formContainer,
+              ...(isMobile ? styles.mobileFormContainer : {}),
+            }}
+          >
             <form onSubmit={handleSubmit} style={styles.formWrapper}>
               <h2 style={styles.title}>Congregation Not Found</h2>
               <p style={styles.subtitle}>
@@ -210,18 +240,24 @@ const NoCongregationPage = () => {
 
               {error && <p style={styles.errorText}>{error}</p>}
 
-              <button type="submit" disabled={isSubmitting} style={styles.button}>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={styles.button}
+              >
                 {isSubmitting ? "Saving..." : "Save and Continue"}
               </button>
             </form>
           </div>
-          <div style={styles.imageContainer}>
-            <img
-              src="/logo1.png"
-              alt="Congregation Illustration"
-              style={styles.image}
-            />
-          </div>
+          {!isMobile && (
+            <div style={styles.imageContainer}>
+              <img
+                src="/logo1.png"
+                alt="Congregation Illustration"
+                style={styles.image}
+              />
+            </div>
+          )}
         </div>
       </div>
     </>
