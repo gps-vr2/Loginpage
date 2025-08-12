@@ -1,6 +1,6 @@
-import { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 
 const API_URL = "https://loginpage-1.vercel.app/api";
@@ -10,7 +10,7 @@ const SetPasswordPage = () => {
   const location = useLocation();
   const { login } = useAuth();
 
-  const email = location.state?.email as string | undefined;
+  const email = location.state?.email;
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -24,7 +24,7 @@ const SetPasswordPage = () => {
     }
   }, [email, navigate]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -45,8 +45,7 @@ const SetPasswordPage = () => {
 
       login(token);
       navigate("/complete-profile");
-    } catch (error) {
-      const err = error as AxiosError<{ error: string }>;
+    } catch (err: any) {
       const message = err.response?.data?.error || "Something went wrong.";
       setErrorMsg(message);
     }
@@ -69,7 +68,6 @@ const SetPasswordPage = () => {
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
             width: "100%",
             maxWidth: "960px",
             height: "600px",
@@ -80,13 +78,8 @@ const SetPasswordPage = () => {
             overflow: "hidden",
           }}
         >
-          {/* Right Section - Hidden on Mobile */}
-          <div
-            style={{
-              width: "50%",
-              display: window.innerWidth < 768 ? "none" : "block",
-            }}
-          >
+          {/* Right Section */}
+          <div style={{ width: "50%", display: "block" }}>
             <img
               src="/logo1.png"
               alt="Visual"
@@ -97,11 +90,11 @@ const SetPasswordPage = () => {
           {/* Left Section */}
           <div
             style={{
-              width: window.innerWidth < 768 ? "100%" : "50%",
+              width: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: window.innerWidth < 768 ? "1rem" : "2rem",
+              padding: "2rem",
             }}
           >
             <form
@@ -113,7 +106,6 @@ const SetPasswordPage = () => {
                 backdropFilter: "blur(10px)",
                 borderRadius: "16px",
                 padding: "2rem",
-                boxSizing: "border-box",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
               }}
             >
@@ -129,7 +121,6 @@ const SetPasswordPage = () => {
                 Set Password
               </h2>
 
-              {/* Password */}
               <label
                 style={{
                   fontSize: "0.875rem",
@@ -154,12 +145,10 @@ const SetPasswordPage = () => {
                   border: "1px solid #d1d5db",
                   backgroundColor: "#f9fafb",
                   marginBottom: "1rem",
-                  boxSizing: "border-box",
                 }}
                 required
               />
 
-              {/* Confirm Password */}
               <label
                 style={{
                   fontSize: "0.875rem",
@@ -184,12 +173,10 @@ const SetPasswordPage = () => {
                   border: "1px solid #d1d5db",
                   backgroundColor: "#f9fafb",
                   marginBottom: "1rem",
-                  boxSizing: "border-box",
                 }}
                 required
               />
 
-              {/* Error Message */}
               {errorMsg && (
                 <p
                   style={{
@@ -203,7 +190,6 @@ const SetPasswordPage = () => {
                 </p>
               )}
 
-              {/* Button */}
               <button
                 type="submit"
                 onMouseEnter={() => setHover(true)}
@@ -224,7 +210,6 @@ const SetPasswordPage = () => {
                 Register Account
               </button>
 
-              {/* Back */}
               <p
                 onClick={() => navigate(-1)}
                 style={{
