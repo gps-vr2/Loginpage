@@ -51,13 +51,36 @@ export const setPassword = async (req: AuthenticatedRequest, res: Response) => {
 export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, hashedPassword } = req.user; 
   const { name, whatsapp, congregationNumber } = req.body;
-  if (!name || !whatsapp || !congregationNumber) return res.status(400).json({ error: "Missing required profile fields" });
+
+  if (!name || !whatsapp || !congregationNumber) {
+    return res.status(400).json({ error: "Missing required profile fields" });
+  }
+
+  // Validate congregation number format (exactly 7 digits)
+  if (!/^\d{7}$/.test(congregationNumber)) {
+    return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
+  }
+
+  // Convert to number for DB storage
+  const congregationNumberNum = Number(congregationNumber);
+
   try {
-    const congregation = await prisma.congregation.findUnique({ where: { idCongregation: parseInt(congregationNumber, 10) } });
-    if (!congregation) return res.status(200).json({ congregationExists: false });
-    await prisma.login.create({
-      data: { name, email, password: hashedPassword, whatsapp, congregationNumber: parseInt(congregationNumber, 10), googleSignIn: false },
+    const congregation = await prisma.congregation.findUnique({
+      where: { idCongregation: congregationNumberNum }
     });
+    if (!congregation) return res.status(200).json({ congregationExists: false });
+
+    await prisma.login.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        whatsapp,
+        congregationNumber: congregationNumberNum,
+        googleSignIn: false
+      },
+    });
+
     return res.status(201).json({ congregationExists: true });
   } catch (error) {
     console.error("Error saving user:", error);
@@ -75,13 +98,21 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = await prisma.login.findUnique({ where: { email: email.toLowerCase() } });
     if (!user || !user.password) return res.status(401).json({ error: 'Invalid email or password' });
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(401).json({ error: 'Invalid email or password' });
+
     const updatedUser = await prisma.login.update({
       where: { id: user.id },
       data: { loginCount: { increment: 1 }, updatedAt: new Date() },
     });
-    const sessionToken = jwt.sign({ id: user.id, email: user.email, name: user.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+
+    const sessionToken = jwt.sign(
+      { id: user.id, email: user.email, name: user.name },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '7d' }
+    );
+
     return res.status(200).json({ token: sessionToken, lastLoginDate: updatedUser.updatedAt });
   } catch (error) {
     console.error('Login failed:', error);
@@ -95,8 +126,12 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
  */
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
   const { user, isNewUser } = req.user;
-  const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, process.env.JWT_SECRET as string, { expiresIn: isNewUser ? '1h' : '7d' });
-  const frontendUrl = process.env.FRONTEND_URL || ' https://www.j7w.org';
+  const token = jwt.sign(
+    { id: user.id, email: user.email, name: user.name },
+    process.env.JWT_SECRET as string,
+    { expiresIn: isNewUser ? '1h' : '7d' }
+  );
+  const frontendUrl = process.env.FRONTEND_URL || 'https://www.j7w.org';
   res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
 };
 
@@ -110,10 +145,12 @@ export const checkMail = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = await prisma.login.findUnique({ where: { email } });
     if (!user) return res.status(404).json({ error: 'No account found with this email.' });
+
     const code = Math.floor(10000 + Math.random() * 90000).toString();
     const expires = Date.now() + 10 * 60 * 1000; // Code expires in 10 minutes
     verificationCodes[email] = { code, expires };
     await sendVerificationCode(email, code);
+
     return res.status(200).json({ message: 'Verification code sent successfully.' });
   } catch (error) {
     console.error('Check mail process failed:', error);
@@ -128,11 +165,18 @@ export const checkMail = async (req: AuthenticatedRequest, res: Response) => {
 export const verifyCode = async (req: AuthenticatedRequest, res: Response) => {
   const { email, code } = req.body;
   if (!email || !code) return res.status(400).json({ error: 'Email and code are required.' });
+
   const storedInfo = verificationCodes[email];
   if (!storedInfo || storedInfo.expires < Date.now() || storedInfo.code !== code) {
     return res.status(400).json({ error: 'Invalid or expired verification code.' });
   }
-  const resetToken = jwt.sign({ email, purpose: 'password-reset' }, process.env.JWT_SECRET as string, { expiresIn: '15m' });
+
+  const resetToken = jwt.sign(
+    { email, purpose: 'password-reset' },
+    process.env.JWT_SECRET as string,
+    { expiresIn: '15m' }
+  );
+
   delete verificationCodes[email];
   return res.status(200).json({ resetToken });
 };
@@ -148,11 +192,13 @@ export const resetPassword = async (req: AuthenticatedRequest, res: Response) =>
   try {
     const decoded = jwt.verify(resetToken, process.env.JWT_SECRET as string) as { email: string; purpose: string };
     if (decoded.purpose !== 'password-reset') return res.status(403).json({ error: 'Invalid token purpose.' });
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await prisma.login.update({
       where: { email: decoded.email },
       data: { password: hashedPassword },
     });
+
     return res.status(200).json({ message: 'Password has been reset successfully.' });
   } catch (error) {
     console.error('Password reset failed:', error);
@@ -186,28 +232,47 @@ export const getUser = async (req: AuthenticatedRequest, res: Response) => {
 export const createCongregationAndUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, hashedPassword } = req.user;
   const { name, whatsapp, congregationNumber, congregationName, language } = req.body;
+
   if (!name || !whatsapp || !congregationNumber || !congregationName || !language) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
-  if (!/^\d{7}$/.test(congregationNumber?.toString())) {
-      return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
+
+  // Validate congregation number format (exactly 7 digits)
+  if (!/^\d{7}$/.test(congregationNumber)) {
+    return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
   }
+
   if (congregationName.trim().length < 3) {
-      return res.status(400).json({ error: "Congregation name must be at least 3 characters." });
+    return res.status(400).json({ error: "Congregation name must be at least 3 characters." });
   }
+
+  // Convert to number for DB storage
+  const congregationNumberNum = Number(congregationNumber);
+
   try {
-    const congNumInt = parseInt(congregationNumber, 10);
-    const existingCongregation = await prisma.congregation.findUnique({ where: { idCongregation: congNumInt } });
-    if (existingCongregation) return res.status(409).json({ error: 'A congregation with this number already exists.' });
+    const existingCongregation = await prisma.congregation.findUnique({
+      where: { idCongregation: congregationNumberNum }
+    });
+
+    if (existingCongregation) {
+      return res.status(409).json({ error: 'A congregation with this number already exists.' });
+    }
+
     const [newCongregation, newUser] = await prisma.$transaction([
       prisma.congregation.create({
-        data: { idCongregation: congNumInt, name: congregationName, language: language },
+        data: { idCongregation: congregationNumberNum, name: congregationName, language }
       }),
       prisma.login.create({
-        data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congNumInt, googleSignIn: false },
+        data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congregationNumberNum, googleSignIn: false }
       }),
     ]);
-    const sessionToken = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+
+    const sessionToken = jwt.sign(
+      { id: newUser.id, email: newUser.email, name: newUser.name },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '7d' }
+    );
+
     return res.status(201).json({ message: 'Congregation and user created successfully.', token: sessionToken });
   } catch (error) {
     console.error('Error creating congregation and user:', error);
