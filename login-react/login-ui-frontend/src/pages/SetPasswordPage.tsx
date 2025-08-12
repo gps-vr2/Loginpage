@@ -16,6 +16,7 @@ const SetPasswordPage = () => {
   const [confirm, setConfirm] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [hover, setHover] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (!email) {
@@ -23,6 +24,13 @@ const SetPasswordPage = () => {
       navigate("/registerng");
     }
   }, [email, navigate]);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +48,7 @@ const SetPasswordPage = () => {
     try {
       const res = await axios.post(`${API_URL}/setpassword`, { email, password });
       const { token } = res.data;
-
       if (!token) throw new Error("Login token not received from server.");
-
       login(token);
       navigate("/complete-profile");
     } catch (err: any) {
@@ -63,49 +69,80 @@ const SetPasswordPage = () => {
           justifyContent: "center",
           fontFamily: "system-ui, sans-serif",
           padding: "1rem",
+          boxSizing: "border-box",
         }}
       >
         <div
           style={{
             display: "flex",
+            flexDirection: isMobile ? "column" : "row",
             width: "100%",
-            maxWidth: "960px",
-            height: "600px",
+            maxWidth: isMobile ? "420px" : "960px",
+            height: isMobile ? "auto" : "600px",
             background: "rgba(255, 255, 255, 0.65)",
             backdropFilter: "blur(14px)",
             borderRadius: "20px",
             boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
             overflow: "hidden",
+            margin: isMobile ? "0 auto" : undefined,
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          {/* Right Section */}
-          <div style={{ width: "50%", display: "block" }}>
-            <img
-              src="/logo1.png"
-              alt="Visual"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
+          {/* Right Section: Logo (hidden or above on mobile) */}
+          {isMobile ? (
+            <div
+              style={{
+                width: "100%",
+                padding: "1rem",
+                display: "flex",
+                justifyContent: "center",
+                backgroundColor: "#fff",
+              }}
+            >
+              <img
+                src="/logo1.png"
+                alt="Visual"
+                style={{
+                  width: "120px",
+                  height: "auto",
+                  borderRadius: "8px",
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{ width: "50%", display: "block" }}>
+              <img
+                src="/logo1.png"
+                alt="Visual"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+          )}
 
-          {/* Left Section */}
+          {/* Left Section: Form */}
           <div
             style={{
-              width: "50%",
+              width: isMobile ? "100%" : "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "2rem",
+              padding: isMobile ? "1rem" : "2rem",
             }}
           >
             <form
               onSubmit={handleSubmit}
               style={{
                 width: "100%",
-                maxWidth: "340px",
+                maxWidth: isMobile ? "90%" : "340px",
                 background: "rgba(255,255,255,0.6)",
                 backdropFilter: "blur(10px)",
                 borderRadius: "16px",
-                padding: "2rem",
+                padding: isMobile ? "1.2rem" : "2rem",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
               }}
             >
@@ -113,7 +150,7 @@ const SetPasswordPage = () => {
                 style={{
                   textAlign: "center",
                   fontWeight: "bold",
-                  fontSize: "1.6rem",
+                  fontSize: isMobile ? "1.4rem" : "1.6rem",
                   marginBottom: "1.5rem",
                   color: "#111827",
                 }}
@@ -139,8 +176,8 @@ const SetPasswordPage = () => {
                 placeholder="Enter a new password"
                 style={{
                   width: "100%",
-                  padding: "0.6rem",
-                  fontSize: "0.875rem",
+                  padding: isMobile ? "0.55rem 0.7rem" : "0.6rem",
+                  fontSize: isMobile ? "0.9rem" : "0.875rem",
                   borderRadius: "8px",
                   border: "1px solid #d1d5db",
                   backgroundColor: "#f9fafb",
@@ -167,8 +204,8 @@ const SetPasswordPage = () => {
                 placeholder="Re-enter password"
                 style={{
                   width: "100%",
-                  padding: "0.6rem",
-                  fontSize: "0.875rem",
+                  padding: isMobile ? "0.55rem 0.7rem" : "0.6rem",
+                  fontSize: isMobile ? "0.9rem" : "0.875rem",
                   borderRadius: "8px",
                   border: "1px solid #d1d5db",
                   backgroundColor: "#f9fafb",
@@ -199,8 +236,8 @@ const SetPasswordPage = () => {
                   backgroundColor: hover ? "#111827" : "#6366f1",
                   color: "#fff",
                   fontWeight: 500,
-                  fontSize: "0.875rem",
-                  padding: "0.75rem",
+                  fontSize: isMobile ? "0.9rem" : "0.875rem",
+                  padding: isMobile ? "0.65rem" : "0.75rem",
                   borderRadius: "10px",
                   border: "none",
                   cursor: "pointer",

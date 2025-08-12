@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
@@ -9,6 +9,14 @@ const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,140 +44,159 @@ const ForgotPasswordPage = () => {
           width: "100%",
           background: "linear-gradient(to right, #d2e0fb, #fef9f7)",
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           alignItems: "center",
           justifyContent: "center",
           fontFamily: "system-ui, sans-serif",
-          padding: "1rem",
+          padding: isMobile ? "1rem 0.75rem" : "1rem",
+          boxSizing: "border-box",
         }}
       >
+        {/* Form Section */}
         <div
           style={{
-            display: "flex",
-            width: "100%",
-            maxWidth: "960px",
-            height: "600px",
-            background: "rgba(255, 255, 255, 0.65)",
-            backdropFilter: "blur(14px)",
-            borderRadius: "20px",
-            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
-            overflow: "hidden",
+            width: isMobile ? "90%" : "50%",
+            backgroundColor: isMobile ? "#fcfdff" : "#c2d5d4",
+            padding: isMobile ? "1rem" : "2rem",
+            borderRadius: isMobile ? "0.75rem" : 0,
+            boxShadow: isMobile ? "0 2px 10px rgba(0,0,0,0.1)" : "none",
+            maxWidth: isMobile ? "400px" : "none",
+            boxSizing: "border-box",
           }}
         >
-          {/* Left Section */}
-          <div
+          <form
+            onSubmit={handleSubmit}
             style={{
-              width: "50%",
-              backgroundColor: "#c2d5d4",
+              width: "100%",
+              maxWidth: "320px",
+              margin: "0 auto",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "2rem",
+              flexDirection: "column",
             }}
           >
-            <form
-              onSubmit={handleSubmit}
+            <h2
               style={{
-                width: "100%",
-                maxWidth: "320px",
-                backgroundColor: "#fcfdff",
-                borderRadius: "0.5rem",
-                padding: "1.5rem",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: isMobile ? "1.4rem" : "1.25rem",
+                color: "#111",
+                marginBottom: "1rem",
               }}
             >
-              <h2
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: "1.25rem",
-                  color: "#111",
-                  marginBottom: "1.25rem",
-                }}
-              >
-                Forgot Password
-              </h2>
+              Forgot Password
+            </h2>
 
-              <label
-                htmlFor="email"
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#0b0b0b",
-                  fontWeight: 500,
-                  marginBottom: "0.25rem",
-                  display: "block",
-                }}
-              >
-                Email
-              </label>
+            <label
+              htmlFor="email"
+              style={{
+                fontSize: isMobile ? "0.9rem" : "0.875rem",
+                color: "#0b0b0b",
+                fontWeight: 500,
+                marginBottom: "0.3rem",
+                display: "block",
+              }}
+            >
+              Email
+            </label>
 
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your registered email"
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  fontSize: "12px",
-                  borderRadius: "0.375rem",
-                  outline: "1px solid #d1d1d1",
-                  backgroundColor: "#f6f6f6",
-                  color: "#000",
-                  marginBottom: "0.75rem",
-                }}
-              />
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your registered email"
+              required
+              style={{
+                width: "100%",
+                padding: isMobile ? "0.6rem" : "0.5rem",
+                fontSize: isMobile ? "14px" : "12px",
+                borderRadius: "0.375rem",
+                outline: "1px solid #d1d1d1",
+                backgroundColor: "#f6f6f6",
+                color: "#000",
+                marginBottom: "0.75rem",
+                boxSizing: "border-box",
+              }}
+            />
 
-              {error && (
-                <p style={{ fontSize: "12px", color: "#dc2626", marginBottom: "0.75rem" }}>
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  backgroundColor: loading ? "#a1a1a1" : "#7370e4",
-                  color: "#fff",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  padding: "0.625rem",
-                  borderRadius: "0.375rem",
-                  border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  marginBottom: "1rem",
-                  transition: "all 0.2s ease-in-out",
-                }}
-              >
-                {loading ? "Checking..." : "Send Verification Code"}
-              </button>
-
+            {error && (
               <p
                 style={{
+                  fontSize: isMobile ? "0.85rem" : "12px",
+                  color: "#dc2626",
+                  marginBottom: "0.75rem",
                   textAlign: "center",
-                  fontSize: "14px",
-                  color: "#111",
                 }}
               >
-                Back to{" "}
-                <Link to="/" style={{ color: "#7573d2", textDecoration: "underline" }}>
-                  Login
-                </Link>
+                {error}
               </p>
-            </form>
-          </div>
+            )}
 
-          {/* Right Section */}
-          <div style={{ width: "50%", display: "block" }}>
-            <img
-              src="/logo1.png"
-              alt="Forgot Password Visual"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%",
+                backgroundColor: loading ? "#a1a1a1" : "#7370e4",
+                color: "#fff",
+                fontSize: isMobile ? "14px" : "12px",
+                fontWeight: 500,
+                padding: isMobile ? "0.8rem" : "0.625rem",
+                borderRadius: "0.375rem",
+                border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                marginBottom: "1rem",
+                transition: "all 0.2s ease-in-out",
+              }}
+            >
+              {loading ? "Checking..." : "Send Verification Code"}
+            </button>
+
+            <p
+              style={{
+                textAlign: "center",
+                fontSize: isMobile ? "13px" : "14px",
+                color: "#111",
+              }}
+            >
+              Back to{" "}
+              <Link
+                to="/"
+                style={{
+                  color: "#7573d2",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                Login
+              </Link>
+            </p>
+          </form>
+        </div>
+
+        {/* Image Section */}
+        <div
+          style={{
+            width: isMobile ? "80%" : "50%",
+            maxWidth: isMobile ? "320px" : "none",
+            marginTop: isMobile ? "1.5rem" : 0,
+            display: "flex",
+            justifyContent: "center",
+            boxSizing: "border-box",
+          }}
+        >
+          <img
+            src="/logo1.png"
+            alt="Forgot Password Visual"
+            style={{
+              width: "100%",
+              maxWidth: isMobile ? "280px" : "100%",
+              height: isMobile ? "auto" : "100%",
+              objectFit: "cover",
+              borderRadius: isMobile ? "1rem" : "0",
+              boxShadow: isMobile ? "0 4px 15px rgba(0,0,0,0.1)" : "none",
+            }}
+          />
         </div>
       </div>
     </>

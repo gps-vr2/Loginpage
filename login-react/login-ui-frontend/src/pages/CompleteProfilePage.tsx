@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import React, { useState} from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
@@ -17,8 +17,14 @@ const CompleteProfilePage = () => {
   const [error, setError] = useState("");
   const [whatsappError, setWhatsappError] = useState("");
   const [congNumError, setCongNumError] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
-  const isMobile = window.innerWidth <= 768;
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const styles: { [key: string]: CSSProperties } = {
     container: {
@@ -29,51 +35,106 @@ const CompleteProfilePage = () => {
       background: "#E8ECEF",
       padding: "1rem",
       fontFamily: "system-ui, sans-serif",
+      boxSizing: "border-box",
     },
     card: {
       display: "flex",
       flexDirection: isMobile ? "column" : "row",
       width: "100%",
-      maxWidth: "960px",
+      maxWidth: isMobile ? "420px" : "960px",
       background: "#fff",
       boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-      borderRadius: "8px",
+      borderRadius: isMobile ? "1rem" : "8px",
       overflow: "hidden",
+      margin: isMobile ? "0 auto" : "1rem",
+      justifyContent: "center",
+      alignItems: "center",
+      height: isMobile ? "auto" : "600px",
     },
     formContainer: {
       flex: 1,
-      padding: "2rem",
+      padding: isMobile ? "1.5rem" : "2rem",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
     },
-    formWrapper: { width: "100%", maxWidth: "340px" },
-    title: { fontSize: "1.875rem", fontWeight: "bold", color: "#111827", marginBottom: "1.5rem", textAlign: "center" },
-    label: { fontSize: "0.875rem", fontWeight: 500, color: "#374151", marginBottom: "0.25rem", display: "block" },
+    formWrapper: {
+      width: "100%",
+      maxWidth: isMobile ? "90%" : "340px",
+      background: isMobile ? "rgba(255,255,255,0.9)" : "transparent",
+      borderRadius: isMobile ? "12px" : undefined,
+      padding: isMobile ? "1rem" : undefined,
+      boxShadow: isMobile ? "0 4px 12px rgba(0,0,0,0.1)" : undefined,
+    },
+    title: {
+      fontSize: isMobile ? "1.5rem" : "1.875rem",
+      fontWeight: "bold",
+      color: "#111827",
+      marginBottom: "1.5rem",
+      textAlign: "center",
+    },
+    label: {
+      fontSize: "0.875rem",
+      fontWeight: 500,
+      color: "#374151",
+      marginBottom: "0.25rem",
+      display: "block",
+    },
     input: {
       width: "100%",
       background: "#f9fafb",
       border: "1px solid #d1d5db",
-      borderRadius: "6px",
-      padding: "0.625rem 0.75rem",
-      fontSize: "0.875rem",
+      borderRadius: isMobile ? "8px" : "6px",
+      padding: isMobile ? "0.55rem 0.7rem" : "0.625rem 0.75rem",
+      fontSize: isMobile ? "0.9rem" : "0.875rem",
       color: "#1f2937",
       marginBottom: "1rem",
+      boxSizing: "border-box",
     },
-    errorText: { fontSize: "0.75rem", color: "#ef4444", marginTop: "-0.5rem", marginBottom: "0.5rem", textAlign: "center" },
+    errorText: {
+      fontSize: "0.75rem",
+      color: "#ef4444",
+      marginTop: "-0.5rem",
+      marginBottom: "0.5rem",
+      textAlign: "center",
+    },
     submitButton: {
       width: "100%",
       background: "#8B5CF6",
       color: "#fff",
       fontWeight: 500,
-      padding: "0.625rem",
-      borderRadius: "6px",
+      padding: isMobile ? "0.65rem" : "0.625rem",
+      fontSize: isMobile ? "0.95rem" : undefined,
+      borderRadius: isMobile ? "10px" : "6px",
       border: "none",
       cursor: "pointer",
       marginTop: "0.5rem",
+      transition: "background-color 0.3s ease",
     },
-    imageContainer: { flex: 1, display: isMobile ? "none" : "block" },
-    image: { width: "100%", height: "100%", objectFit: "cover" },
+    imageContainer: {
+      flex: 1,
+      display: isMobile ? "none" : "block",
+    },
+    image: {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    },
+    imageMobileWrapper: {
+      width: "100%",
+      display: "flex",
+      justifyContent: "center",
+      padding: "1rem",
+      backgroundColor: "#fff",
+      borderRadius: "1rem",
+      marginBottom: "1rem",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    },
+    imageMobile: {
+      width: "120px",
+      height: "auto",
+      borderRadius: "8px",
+    },
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,12 +184,26 @@ const CompleteProfilePage = () => {
       <title>Complete Profile</title>
       <div style={styles.container}>
         <div style={styles.card}>
+          {/* On mobile, show logo above the form */}
+          {isMobile && (
+            <div style={styles.imageMobileWrapper}>
+              <img src="/logo1.png" alt="Logo" style={styles.imageMobile} />
+            </div>
+          )}
+
           <div style={styles.formContainer}>
             <form onSubmit={handleSubmit} style={styles.formWrapper}>
               <h2 style={styles.title}>Complete Your Profile</h2>
 
               <label style={styles.label}>Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" style={styles.input} required />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your Name"
+                style={styles.input}
+                required
+              />
 
               <label style={styles.label}>WhatsApp Number</label>
               <input
@@ -147,9 +222,11 @@ const CompleteProfilePage = () => {
                 type="text"
                 value={congNum}
                 maxLength={7}
-                onChange={(e) => setCongNum(e.target.value.replace(/\D/g, "").slice(0, 7))}
+                onChange={(e) =>
+                  setCongNum(e.target.value.replace(/\D/g, "").slice(0, 7))
+                }
                 onKeyDown={handleNumberInput}
-                placeholder="Enter 6-digit Congregation Number"
+                placeholder="Enter 7-digit Congregation Number"
                 style={styles.input}
                 required
               />
@@ -161,9 +238,17 @@ const CompleteProfilePage = () => {
               </button>
             </form>
           </div>
-          <div style={styles.imageContainer}>
-            <img src="/logo1.png" alt="Background Illustration" style={styles.image} />
-          </div>
+
+          {/* Show desktop image only */}
+          {!isMobile && (
+            <div style={styles.imageContainer}>
+              <img
+                src="/logo1.png"
+                alt="Background Illustration"
+                style={styles.image}
+              />
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -5,108 +5,6 @@ import axios from "axios";
 
 const API_URL = "https://loginpage-1.vercel.app/api";
 
-const styles = {
-  container: {
-    minHeight: "100vh",
-    width: "100%",
-    backgroundColor: "#E8ECEF",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "system-ui, sans-serif",
-  },
-  card: {
-    display: "flex",
-    width: "100%",
-    maxWidth: "960px",
-    height: "600px",
-    backgroundColor: "white",
-    boxShadow:
-      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-    borderRadius: "0.5rem",
-    overflow: "hidden",
-    margin: "1rem",
-  },
-  formContainer: {
-    width: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem",
-  },
-  formWrapper: {
-    width: "100%",
-    maxWidth: "360px",
-  },
-  title: {
-    fontSize: "1.75rem",
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: "0.5rem",
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: "0.875rem",
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: "1.5rem",
-  },
-  label: {
-    display: "block",
-    fontSize: "0.875rem",
-    fontWeight: 500,
-    color: "#374151",
-    marginBottom: "0.25rem",
-  },
-  input: {
-    width: "100%",
-    backgroundColor: "#f9fafb",
-    border: "1px solid #d1d5db",
-    borderRadius: "0.375rem",
-    padding: "0.625rem 0.75rem",
-    fontSize: "0.875rem",
-    color: "#1f2937",
-    marginBottom: "1rem",
-  },
-  disabledInput: {
-    width: "100%",
-    backgroundColor: "#e5e7eb",
-    borderRadius: "0.375rem",
-    padding: "0.625rem 0.75rem",
-    fontSize: "0.875rem",
-    color: "#6b7280",
-    marginBottom: "1rem",
-  },
-  button: {
-    width: "100%",
-    backgroundColor: "#7370e4",
-    color: "white",
-    fontWeight: 500,
-    padding: "0.625rem",
-    borderRadius: "0.375rem",
-    border: "none",
-    cursor: "pointer",
-    marginTop: "0.5rem",
-    transition: "background-color 0.3s",
-  },
-  errorText: {
-    fontSize: "0.75rem",
-    color: "#ef4444",
-    marginTop: "-0.5rem",
-    marginBottom: "0.5rem",
-    textAlign: "center",
-  },
-  imageContainer: {
-    width: "50%",
-    display: "block",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-} as const;
-
 const NoCongregationPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -118,6 +16,7 @@ const NoCongregationPage = () => {
   const [language, setLanguage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   const toProperCase = (text: string) =>
     text
@@ -132,6 +31,132 @@ const NoCongregationPage = () => {
       navigate("/complete-profile");
     }
   }, [name, whatsapp, congregationNumber, navigate]);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const styles: { [key: string]: React.CSSProperties } = {
+    container: {
+      minHeight: "100vh",
+      width: "100%",
+      backgroundColor: "#E8ECEF",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "system-ui, sans-serif",
+      padding: "1rem",
+      boxSizing: "border-box",
+    },
+    card: {
+      display: "flex",
+      flexDirection: isMobile ? "column" : "row",
+      width: "100%",
+      maxWidth: isMobile ? "420px" : "960px",
+      height: isMobile ? "auto" : "600px",
+      backgroundColor: "white",
+      boxShadow:
+        "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      borderRadius: isMobile ? "1rem" : "0.5rem",
+      overflow: "hidden",
+      margin: isMobile ? "0 auto" : "1rem",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    formContainer: {
+      width: isMobile ? "100%" : "50%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: isMobile ? "1rem" : "2rem",
+    },
+    formWrapper: {
+      width: "100%",
+      maxWidth: isMobile ? "90%" : "360px",
+    },
+    title: {
+      fontSize: isMobile ? "1.5rem" : "1.75rem",
+      fontWeight: "bold",
+      color: "#111827",
+      marginBottom: "0.5rem",
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: "0.875rem",
+      color: "#6b7280",
+      textAlign: "center",
+      marginBottom: "1.5rem",
+    },
+    label: {
+      display: "block",
+      fontSize: "0.875rem",
+      fontWeight: 500,
+      color: "#374151",
+      marginBottom: "0.25rem",
+    },
+    input: {
+      width: "100%",
+      backgroundColor: "#f9fafb",
+      border: "1px solid #d1d5db",
+      borderRadius: "0.375rem",
+      padding: isMobile ? "0.55rem 0.7rem" : "0.625rem 0.75rem",
+      fontSize: isMobile ? "0.9rem" : "0.875rem",
+      color: "#1f2937",
+      marginBottom: "1rem",
+      boxSizing: "border-box",
+    },
+    disabledInput: {
+      width: "100%",
+      backgroundColor: "#e5e7eb",
+      borderRadius: "0.375rem",
+      padding: isMobile ? "0.55rem 0.7rem" : "0.625rem 0.75rem",
+      fontSize: isMobile ? "0.9rem" : "0.875rem",
+      color: "#6b7280",
+      marginBottom: "1rem",
+      boxSizing: "border-box",
+    },
+    button: {
+      width: "100%",
+      backgroundColor: "#7370e4",
+      color: "white",
+      fontWeight: 500,
+      padding: isMobile ? "0.6rem" : "0.625rem",
+      fontSize: isMobile ? "1rem" : undefined,
+      borderRadius: "0.375rem",
+      border: "none",
+      cursor: "pointer",
+      marginTop: "0.5rem",
+      transition: "background-color 0.3s",
+    },
+    errorText: {
+      fontSize: "0.75rem",
+      color: "#ef4444",
+      marginTop: "-0.5rem",
+      marginBottom: "0.5rem",
+      textAlign: "center",
+    },
+    imageContainer: {
+      width: isMobile ? "100%" : "50%",
+      display: isMobile ? "flex" : "block",
+      justifyContent: "center",
+      padding: isMobile ? "1rem" : undefined,
+      backgroundColor: isMobile ? "#fff" : undefined,
+      borderRadius: isMobile ? "1rem" : undefined,
+      marginTop: isMobile ? "1rem" : undefined,
+      boxShadow: isMobile
+        ? "0 4px 12px rgba(0,0,0,0.1)"
+        : undefined,
+    },
+    image: {
+      width: isMobile ? "150px" : "100%",
+      height: isMobile ? "auto" : "100%",
+      objectFit: "cover",
+      borderRadius: isMobile ? "8px" : undefined,
+    },
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,7 +208,7 @@ const NoCongregationPage = () => {
               <label style={styles.label}>Congregation Number</label>
               <input
                 type="text"
-                value={congregationNumber}
+                value={congregationNumber || ""}
                 disabled
                 style={styles.disabledInput}
               />
