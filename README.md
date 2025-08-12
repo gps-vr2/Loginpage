@@ -1,6 +1,6 @@
 GPS VR2 – Login Page
 This project is a Login Page built using modern web technologies, featuring Google Sign-In and Email/Password authentication.
-Once logged in, users can access 4 integrated applications after completing their profile setup.
+Once logged in,users can access 4 integrated applications after completing their profile setup.
 
 🚀 Technologies Used
 Frontend Framework: React + Vite
