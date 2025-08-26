@@ -5,13 +5,12 @@ import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { sendVerificationCode } from '../utils/mailer';
 
-// A simple in-memory store for password reset codes.
-// In a production app, use a database table or Redis for this.
+// In-memory store for verification codes (for demo; use Redis in production)
 const verificationCodes: { [email: string]: { code: string; expires: number } } = {};
 
 /**
- * @description Handles the initial registration check to see if an email is already in use.
  * @route POST /api/register
+ * @desc Check if email is already in use
  */
 export const registerUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email } = req.body;
@@ -27,13 +26,14 @@ export const registerUser = async (req: AuthenticatedRequest, res: Response) => 
 };
 
 /**
- * @description Sets a password for a new user and returns a temporary token for profile completion.
  * @route POST /api/setpassword
+ * @desc Sets password for new user and returns temporary token
  */
 export const setPassword = async (req: AuthenticatedRequest, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Missing email or password" });
   if (password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const registrationToken = jwt.sign({ email, hashedPassword }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
@@ -45,30 +45,31 @@ export const setPassword = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * @description Saves the final user details to the database after verifying the registration token.
  * @route POST /api/saveuser
+ * @desc Saves final user details after verifying registration token
  */
 export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
-  const { email, hashedPassword } = req.user; 
+  const { email, hashedPassword } = req.user;
   const { name, whatsapp, congregationNumber } = req.body;
 
   if (!name || !whatsapp || !congregationNumber) {
     return res.status(400).json({ error: "Missing required profile fields" });
   }
 
-  // Validate congregation number format (exactly 7 digits)
   if (!/^\d{7}$/.test(congregationNumber)) {
     return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
   }
 
-  // Convert to number for DB storage
   const congregationNumberNum = Number(congregationNumber);
 
   try {
-    const congregation = await prisma.congregation.findUnique({
-      where: { idCongregation: congregationNumberNum }
+    const existingUser = await prisma.login.findFirst({
+      where: { congregationNumber: congregationNumberNum }
     });
-    if (!congregation) return res.status(200).json({ congregationExists: false });
+
+    if (existingUser) {
+      return res.status(200).json({ congregationExists: true, existingEmail: existingUser.email });
+    }
 
     await prisma.login.create({
       data: {
@@ -81,7 +82,7 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
-    return res.status(201).json({ congregationExists: true });
+    return res.status(201).json({ congregationExists: false });
   } catch (error) {
     console.error("Error saving user:", error);
     return res.status(500).json({ error: "Failed to save user." });
@@ -89,12 +90,13 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * @description Authenticates a user with email and password, returning a JWT.
  * @route POST /api/login
+ * @desc Authenticates user and returns JWT
  */
 export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
   try {
     const user = await prisma.login.findUnique({ where: { email: email.toLowerCase() } });
     if (!user || !user.password) return res.status(401).json({ error: 'Invalid email or password' });
@@ -121,8 +123,8 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * @description Callback handler for Google OAuth. Creates a JWT and redirects to the frontend.
  * @route GET /api/auth/google/callback
+ * @desc Google OAuth callback
  */
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
   const { user, isNewUser } = req.user;
@@ -131,23 +133,25 @@ export const googleCallback = async (req: AuthenticatedRequest, res: Response) =
     process.env.JWT_SECRET as string,
     { expiresIn: isNewUser ? '1h' : '7d' }
   );
+
   const frontendUrl = process.env.FRONTEND_URL || 'https://www.j7w.org';
   res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
 };
 
 /**
- * @description Checks if an email exists and sends a verification code for password reset.
  * @route POST /api/checkmail
+ * @desc Checks if email exists and sends verification code
  */
 export const checkMail = async (req: AuthenticatedRequest, res: Response) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
+
   try {
     const user = await prisma.login.findUnique({ where: { email } });
     if (!user) return res.status(404).json({ error: 'No account found with this email.' });
 
     const code = Math.floor(10000 + Math.random() * 90000).toString();
-    const expires = Date.now() + 10 * 60 * 1000; // Code expires in 10 minutes
+    const expires = Date.now() + 10 * 60 * 1000;
     verificationCodes[email] = { code, expires };
     await sendVerificationCode(email, code);
 
@@ -159,8 +163,8 @@ export const checkMail = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * @description Verifies a 5-digit code and returns a temporary token for resetting the password.
  * @route POST /api/verify-code
+ * @desc Verifies code and returns temporary reset token
  */
 export const verifyCode = async (req: AuthenticatedRequest, res: Response) => {
   const { email, code } = req.body;
@@ -182,13 +186,14 @@ export const verifyCode = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * @description Resets a user's password using a valid reset token.
  * @route POST /api/reset-password
+ * @desc Resets user password
  */
 export const resetPassword = async (req: AuthenticatedRequest, res: Response) => {
   const { resetToken, newPassword } = req.body;
   if (!resetToken || !newPassword) return res.status(400).json({ error: 'Token and new password are required.' });
   if (newPassword.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+
   try {
     const decoded = jwt.verify(resetToken, process.env.JWT_SECRET as string) as { email: string; purpose: string };
     if (decoded.purpose !== 'password-reset') return res.status(403).json({ error: 'Invalid token purpose.' });
@@ -207,8 +212,8 @@ export const resetPassword = async (req: AuthenticatedRequest, res: Response) =>
 };
 
 /**
- * @description Fetches details for the currently authenticated user.
  * @route GET /api/getuser
+ * @desc Fetch currently authenticated user
  */
 export const getUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -226,8 +231,36 @@ export const getUser = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * @description Creates a new congregation and a new user simultaneously.
+ * @route GET /api/getUserByCongregation
+ * @desc Returns email of existing user for a given congregation number
+ */
+export const getUserByCongregation = async (req: AuthenticatedRequest, res: Response) => {
+  const { congId } = req.query;
+
+  if (!congId || typeof congId !== "string") {
+    return res.status(400).json({ error: "Congregation number is required" });
+  }
+
+  try {
+    const user = await prisma.login.findFirst({
+      where: { congregationNumber: Number(congId) },
+      select: { email: true, name: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "No user found with this congregation number" });
+    }
+
+    return res.status(200).json({ email: user.email, name: user.name });
+  } catch (error) {
+    console.error("Error fetching user by congregation:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
  * @route POST /api/Congname
+ * @desc Creates a new congregation and new user
  */
 export const createCongregationAndUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, hashedPassword } = req.user;
@@ -237,7 +270,6 @@ export const createCongregationAndUser = async (req: AuthenticatedRequest, res: 
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
-  // Validate congregation number format (exactly 7 digits)
   if (!/^\d{7}$/.test(congregationNumber)) {
     return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
   }
@@ -246,7 +278,6 @@ export const createCongregationAndUser = async (req: AuthenticatedRequest, res: 
     return res.status(400).json({ error: "Congregation name must be at least 3 characters." });
   }
 
-  // Convert to number for DB storage
   const congregationNumberNum = Number(congregationNumber);
 
   try {

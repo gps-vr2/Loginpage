@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const ExistPage = () => {
@@ -6,10 +6,23 @@ const ExistPage = () => {
   const location = useLocation();
   const congregationNumber = location.state?.congregationNumber;
 
+  const [adminEmail, setAdminEmail] = useState("admin@example.com");
+
   useEffect(() => {
     if (!congregationNumber) {
       navigate("/");
+      return;
     }
+
+    // Fetch existing user email for the congregation number
+    fetch(`/api/getUserByCongregation?congId=${congregationNumber}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.email) setAdminEmail(data.email);
+      })
+      .catch(() => {
+        // fallback already set in useState
+      });
   }, [congregationNumber, navigate]);
 
   return (
@@ -83,7 +96,7 @@ const ExistPage = () => {
             a reminder to approve your access.
           </p>
           <a
-            href="mailto:admin@example.com"
+            href={`mailto:${adminEmail}`}
             style={{
               fontSize: "12px",
               color: "#072fcf",

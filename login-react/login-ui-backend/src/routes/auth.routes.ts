@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import passport from 'passport';
+import { getUserByCongregation } from '../controllers/user.controller';
+
 import { 
   registerUser, 
   setPassword,
@@ -23,6 +25,9 @@ router.post('/login', loginUser);
 router.post('/checkmail', checkMail);
 router.post('/verify-code', verifyCode);
 router.post('/reset-password', resetPassword);
+// Fetch existing user by congregation number
+router.get('/getUserByCongregation', getUserByCongregation);
+
 
 // --- Google OAuth Routes ---
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
