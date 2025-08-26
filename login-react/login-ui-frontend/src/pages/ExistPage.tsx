@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const ExistPage = () => {
@@ -6,9 +6,26 @@ const ExistPage = () => {
   const location = useLocation();
   const congregationNumber = location.state?.congregationNumber;
 
+  const [adminEmail, setAdminEmail] = useState(""); // ✅ store fetched email
+
   useEffect(() => {
     if (!congregationNumber) {
       navigate("/");
+    } else {
+      // ✅ Fetch admin email from backend
+      const fetchAdminEmail = async () => {
+        try {
+          const res = await fetch(`/api/congregation/${congregationNumber}/admin`);
+          if (!res.ok) throw new Error("No user found");
+          const data = await res.json();
+          setAdminEmail(data.adminEmail);
+        } catch (err) {
+          console.error(err);
+          setAdminEmail("support@example.com"); // fallback
+        }
+      };
+
+      fetchAdminEmail();
     }
   }, [congregationNumber, navigate]);
 
@@ -82,16 +99,20 @@ const ExistPage = () => {
             To help speed up the process, you may personally contact the admin as
             a reminder to approve your access.
           </p>
-          <a
-            href="mailto:admin@example.com"
-            style={{
-              fontSize: "12px",
-              color: "#072fcf",
-              textDecoration: "underline",
-            }}
-          >
-            Mail the Admin
-          </a>
+
+          {/* ✅ Dynamic mailto link */}
+          {adminEmail && (
+            <a
+              href={`mailto:${adminEmail}`}
+              style={{
+                fontSize: "12px",
+                color: "#072fcf",
+                textDecoration: "underline",
+              }}
+            >
+              Mail the Admin ({adminEmail})
+            </a>
+          )}
         </div>
       </div>
     </>
