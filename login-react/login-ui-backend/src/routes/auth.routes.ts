@@ -14,9 +14,6 @@ import {
 } from '../controllers/auth.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
-// ✅ Import Prisma client
-import { prisma } from '../lib/prisma'; // adjust the path if needed
-
 const router = Router();
 
 // --- Public Routes ---
@@ -39,26 +36,5 @@ router.get(
 router.post('/saveuser', authenticateToken, saveUser);
 router.get('/getuser', authenticateToken, getUser);
 router.post('/Congname', authenticateToken, createCongregationAndUser);
-
-// ✅ NEW: Fetch existing user email for a congregation
-router.get('/congregation/:id/admin', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const existingUser = await prisma.login.findFirst({
-      where: { congregationNumber: Number(id) },
-      select: { email: true },
-    });
-
-    if (!existingUser) {
-      return res.status(404).json({ error: "No user found in this congregation" });
-    }
-
-    res.json({ adminEmail: existingUser.email });
-  } catch (err) {
-    console.error("Error fetching admin email:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
 export default router;
