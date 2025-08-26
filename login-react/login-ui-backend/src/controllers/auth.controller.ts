@@ -5,9 +5,12 @@ import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { sendVerificationCode } from '../utils/mailer';
 
-
-// In-memory store for verification codes (for demo; use Redis in production)
+// In-memory store for verification codes (for demo; in production, use Redis)
 const verificationCodes: { [email: string]: { code: string; expires: number } } = {};
+
+/* ============================
+   Registration / Password
+============================ */
 
 /**
  * @route POST /api/register
@@ -16,6 +19,7 @@ const verificationCodes: { [email: string]: { code: string; expires: number } } 
 export const registerUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required.' });
+
   try {
     const existingUser = await prisma.login.findUnique({ where: { email } });
     if (existingUser) return res.status(409).json({ error: 'A user with this email already exists.' });
@@ -45,6 +49,10 @@ export const setPassword = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+/* ============================
+   User Creation
+============================ */
+
 /**
  * @route POST /api/saveuser
  * @desc Saves final user details after verifying registration token
@@ -56,7 +64,6 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
   if (!name || !whatsapp || !congregationNumber) {
     return res.status(400).json({ error: "Missing required profile fields" });
   }
-
   if (!/^\d{7}$/.test(congregationNumber)) {
     return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
   }
@@ -64,8 +71,15 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
   const congregationNumberNum = Number(congregationNumber);
 
   try {
+    const congregation = await prisma.congregation.findUnique({
+      where: { idCongregation: congregationNumberNum },
+    });
+    if (!congregation) {
+      return res.status(400).json({ error: "This congregation does not exist." });
+    }
+
     const existingUser = await prisma.login.findFirst({
-      where: { congregationNumber: congregationNumberNum }
+      where: { congregationNumber: congregationNumberNum },
     });
 
     if (existingUser) {
@@ -89,6 +103,10 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(500).json({ error: "Failed to save user." });
   }
 };
+
+/* ============================
+   Login
+============================ */
 
 /**
  * @route POST /api/login
@@ -123,10 +141,10 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @route GET /api/auth/google/callback
- * @desc Google OAuth callback
- */
+/* ============================
+   Google OAuth Callback
+============================ */
+
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
   const { user, isNewUser } = req.user;
   const token = jwt.sign(
@@ -139,10 +157,10 @@ export const googleCallback = async (req: AuthenticatedRequest, res: Response) =
   res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
 };
 
-/**
- * @route POST /api/checkmail
- * @desc Checks if email exists and sends verification code
- */
+/* ============================
+   Email Verification
+============================ */
+
 export const checkMail = async (req: AuthenticatedRequest, res: Response) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -158,15 +176,11 @@ export const checkMail = async (req: AuthenticatedRequest, res: Response) => {
 
     return res.status(200).json({ message: 'Verification code sent successfully.' });
   } catch (error) {
-    console.error('Check mail process failed:', error);
+    console.error('Check mail failed:', error);
     return res.status(500).json({ error: 'Failed to send verification code.' });
   }
 };
 
-/**
- * @route POST /api/verify-code
- * @desc Verifies code and returns temporary reset token
- */
 export const verifyCode = async (req: AuthenticatedRequest, res: Response) => {
   const { email, code } = req.body;
   if (!email || !code) return res.status(400).json({ error: 'Email and code are required.' });
@@ -186,10 +200,6 @@ export const verifyCode = async (req: AuthenticatedRequest, res: Response) => {
   return res.status(200).json({ resetToken });
 };
 
-/**
- * @route POST /api/reset-password
- * @desc Resets user password
- */
 export const resetPassword = async (req: AuthenticatedRequest, res: Response) => {
   const { resetToken, newPassword } = req.body;
   if (!resetToken || !newPassword) return res.status(400).json({ error: 'Token and new password are required.' });
@@ -212,10 +222,10 @@ export const resetPassword = async (req: AuthenticatedRequest, res: Response) =>
   }
 };
 
-/**
- * @route GET /api/getuser
- * @desc Fetch currently authenticated user
- */
+/* ============================
+   Get Current User
+============================ */
+
 export const getUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user.id;
@@ -231,27 +241,20 @@ export const getUser = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @route GET /api/getUserByCongregation
- * @desc Returns email of existing user for a given congregation number
- */
+/* ============================
+   Get User By Congregation
+============================ */
+
 export const getUserByCongregation = async (req: AuthenticatedRequest, res: Response) => {
   const { congId } = req.query;
-
-  if (!congId || typeof congId !== "string") {
-    return res.status(400).json({ error: "Congregation number is required" });
-  }
+  if (!congId || typeof congId !== "string") return res.status(400).json({ error: "Congregation number is required" });
 
   try {
     const user = await prisma.login.findFirst({
       where: { congregationNumber: Number(congId) },
       select: { email: true, name: true },
     });
-
-    if (!user) {
-      return res.status(404).json({ error: "No user found with this congregation number" });
-    }
-
+    if (!user) return res.status(404).json({ error: "No user found with this congregation number" });
     return res.status(200).json({ email: user.email, name: user.name });
   } catch (error) {
     console.error("Error fetching user by congregation:", error);
@@ -259,10 +262,10 @@ export const getUserByCongregation = async (req: AuthenticatedRequest, res: Resp
   }
 };
 
-/**
- * @route POST /api/Congname
- * @desc Creates a new congregation and new user
- */
+/* ============================
+   Create Congregation & User
+============================ */
+
 export const createCongregationAndUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, hashedPassword } = req.user;
   const { name, whatsapp, congregationNumber, congregationName, language } = req.body;
@@ -270,40 +273,21 @@ export const createCongregationAndUser = async (req: AuthenticatedRequest, res: 
   if (!name || !whatsapp || !congregationNumber || !congregationName || !language) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
-
-  if (!/^\d{7}$/.test(congregationNumber)) {
-    return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
-  }
-
-  if (congregationName.trim().length < 3) {
-    return res.status(400).json({ error: "Congregation name must be at least 3 characters." });
-  }
+  if (!/^\d{7}$/.test(congregationNumber)) return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
+  if (congregationName.trim().length < 3) return res.status(400).json({ error: "Congregation name must be at least 3 characters." });
 
   const congregationNumberNum = Number(congregationNumber);
 
   try {
-    const existingCongregation = await prisma.congregation.findUnique({
-      where: { idCongregation: congregationNumberNum }
-    });
-
-    if (existingCongregation) {
-      return res.status(409).json({ error: 'A congregation with this number already exists.' });
-    }
+    const existingCongregation = await prisma.congregation.findUnique({ where: { idCongregation: congregationNumberNum } });
+    if (existingCongregation) return res.status(409).json({ error: 'A congregation with this number already exists.' });
 
     const [newCongregation, newUser] = await prisma.$transaction([
-      prisma.congregation.create({
-        data: { idCongregation: congregationNumberNum, name: congregationName, language }
-      }),
-      prisma.login.create({
-        data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congregationNumberNum, googleSignIn: false }
-      }),
+      prisma.congregation.create({ data: { idCongregation: congregationNumberNum, name: congregationName, language } }),
+      prisma.login.create({ data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congregationNumberNum, googleSignIn: false } }),
     ]);
 
-    const sessionToken = jwt.sign(
-      { id: newUser.id, email: newUser.email, name: newUser.name },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '7d' }
-    );
+    const sessionToken = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
 
     return res.status(201).json({ message: 'Congregation and user created successfully.', token: sessionToken });
   } catch (error) {
