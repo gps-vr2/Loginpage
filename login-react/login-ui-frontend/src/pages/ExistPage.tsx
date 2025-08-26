@@ -18,18 +18,24 @@ const ExistPage = () => {
       return;
     }
 
-    // Fetch existing user email for the congregation number
     const fetchAdminEmail = async () => {
       try {
-        const res = await fetch(`${API_URL}/getUserByCongregation?congId=${congregationNumber}`);
+        const res = await fetch(
+          `${API_URL}/getUserByCongregation?congId=${congregationNumber}`
+        );
         const data = await res.json();
 
         if (res.ok && data.email) {
           setAdminEmail(data.email);
+
+          // Optional: auto redirect to login or main page after 5s
+          setTimeout(() => {
+            navigate("/login"); // or "/App_page" as needed
+          }, 5000);
         } else {
           setErrorMsg("No admin found for this congregation.");
         }
-      } catch (err) {
+      } catch {
         setErrorMsg("Failed to fetch admin email.");
       } finally {
         setLoading(false);
@@ -39,92 +45,92 @@ const ExistPage = () => {
     fetchAdminEmail();
   }, [congregationNumber, navigate]);
 
+  const styles: { [key: string]: React.CSSProperties } = {
+    container: {
+      minHeight: "100vh",
+      width: "100%",
+      background: "linear-gradient(to right, #d2e0fb, #fef9f7)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      fontFamily: "system-ui, sans-serif",
+      padding: "2rem 1rem",
+      boxSizing: "border-box",
+    },
+    logo: {
+      width: "140px",
+      height: "auto",
+      marginBottom: "2rem",
+      borderRadius: "12px",
+    },
+    card: {
+      background: "rgba(255,255,255,0.85)",
+      padding: "2rem",
+      borderRadius: "16px",
+      width: "100%",
+      maxWidth: "400px",
+      textAlign: "center",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+    },
+    checkImage: {
+      width: "40px",
+      height: "40px",
+      margin: "0 auto 1rem",
+    },
+    title: {
+      fontSize: "14px",
+      fontWeight: "bold",
+      color: "#111",
+      marginBottom: "0.75rem",
+      lineHeight: 1.4,
+    },
+    text: {
+      fontSize: "13px",
+      color: "#444",
+      marginBottom: "1rem",
+      lineHeight: 1.6,
+    },
+    link: {
+      fontSize: "12px",
+      color: "#072fcf",
+      textDecoration: "underline",
+    },
+    errorText: {
+      fontSize: "14px",
+      color: "#f00",
+    },
+  };
+
   return (
     <>
       <title>Request Submitted</title>
-      <div
-        style={{
-          minHeight: "100vh",
-          width: "100%",
-          background: "linear-gradient(to right, #d2e0fb, #fef9f7)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          fontFamily: "system-ui, sans-serif",
-          padding: "2rem 1rem",
-          boxSizing: "border-box",
-        }}
-      >
-        {/* Logo */}
-        <img
-          src="/logo1.png"
-          alt="Logo"
-          style={{
-            width: "140px",
-            height: "auto",
-            marginBottom: "2rem",
-            borderRadius: "12px",
-          }}
-        />
+      <div style={styles.container}>
+        <img src="/logo1.png" alt="Logo" style={styles.logo} />
 
-        {/* Message Card */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.85)",
-            padding: "2rem",
-            borderRadius: "16px",
-            width: "100%",
-            maxWidth: "400px",
-            textAlign: "center",
-            boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-          }}
-        >
-          <img
-            src="/check.png"
-            alt="Checkmark"
-            style={{ width: "40px", height: "40px", margin: "0 auto 1rem" }}
-          />
+        <div style={styles.card}>
+          <img src="/check.png" alt="Checkmark" style={styles.checkImage} />
 
           {loading ? (
-            <p style={{ fontSize: "14px", color: "#111" }}>Checking congregation info...</p>
+            <p style={styles.text}>Checking congregation info...</p>
           ) : errorMsg ? (
-            <p style={{ fontSize: "14px", color: "#f00" }}>{errorMsg}</p>
+            <p style={styles.errorText}>{errorMsg}</p>
           ) : (
             <>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  color: "#111",
-                  marginBottom: "0.75rem",
-                  lineHeight: "1.4",
-                }}
-              >
-                Thank you for requesting to join Congregation #{congregationNumber}
+              <p style={styles.title}>
+                Thank you for requesting to join Congregation #
+                {congregationNumber}
               </p>
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#444",
-                  marginBottom: "1rem",
-                  lineHeight: "1.6",
-                }}
-              >
-                An email has been sent to the administrator to review your admission.
-                To help speed up the process, you may personally contact the admin as
-                a reminder to approve your access.
+              <p style={styles.text}>
+                An email has been sent to the administrator to review your admission. 
+                You can also personally contact the admin to speed up the approval.
               </p>
-              <a
-                href={`mailto:${adminEmail}`}
-                style={{
-                  fontSize: "12px",
-                  color: "#072fcf",
-                  textDecoration: "underline",
-                }}
-              >
+              <a href={`mailto:${adminEmail}`} style={styles.link}>
                 Mail the Admin
               </a>
+              <p style={{ marginTop: "1rem", fontSize: "12px", color: "#6b7280" }}>
+                Redirecting shortly...
+              </p>
             </>
           )}
         </div>
