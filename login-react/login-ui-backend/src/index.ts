@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import passport from 'passport';
 import authRoutes from './routes/auth.routes';
 
+
 // This line executes the passport configuration
 import './config/passport'; 
 

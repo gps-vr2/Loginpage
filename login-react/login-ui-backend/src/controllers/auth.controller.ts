@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { sendVerificationCode } from '../utils/mailer';
 
+
 // In-memory store for verification codes (for demo; use Redis in production)
 const verificationCodes: { [email: string]: { code: string; expires: number } } = {};
 

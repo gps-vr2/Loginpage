@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import passport from 'passport';
-import { getUserByCongregation } from '../controllers/user.controller';
 
 import { 
   registerUser, 
@@ -12,7 +11,8 @@ import {
   verifyCode,
   resetPassword,
   getUser,
-  createCongregationAndUser
+  createCongregationAndUser,
+  getUserByCongregation  // <- added here
 } from '../controllers/auth.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
@@ -25,9 +25,9 @@ router.post('/login', loginUser);
 router.post('/checkmail', checkMail);
 router.post('/verify-code', verifyCode);
 router.post('/reset-password', resetPassword);
+
 // Fetch existing user by congregation number
 router.get('/getUserByCongregation', getUserByCongregation);
-
 
 // --- Google OAuth Routes ---
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -37,7 +37,7 @@ router.get(
   googleCallback
 );
 
-// --- Protected Routes (require a valid JWT) ---
+// --- Protected Routes ---
 router.post('/saveuser', authenticateToken, saveUser);
 router.get('/getuser', authenticateToken, getUser);
 router.post('/Congname', authenticateToken, createCongregationAndUser);
