@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const API_URL = "https://loginpage-1.vercel.app/api";
-
 const ExistPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +15,7 @@ const ExistPage = () => {
     }
 
     // Fetch existing user email for the congregation number
-    fetch(`${API_URL}/getUserByCongregation?congId=${congregationNumber}`)
+    fetch(`/api/getUserByCongregation?congId=${congregationNumber}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.email) setAdminEmail(data.email);
