@@ -7,18 +7,19 @@ const ExistPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const congregationNumber = location.state?.congregationNumber;
+  const userEmail = location.state?.userEmail;
 
   const [adminEmail, setAdminEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    if (!congregationNumber) {
+    if (!congregationNumber || !userEmail) {
       navigate("/");
       return;
     }
 
-    const fetchAdminEmail = async () => {
+    const fetchAdminEmailAndNotify = async () => {
       try {
         const res = await fetch(
           `${API_URL}/getUserByCongregation?congId=${congregationNumber}`
@@ -28,22 +29,35 @@ const ExistPage = () => {
         if (res.ok && data.email) {
           setAdminEmail(data.email);
 
-          // Optional: auto redirect to login or main page after 5s
+          // Send notification email to admin
+          await fetch(`${API_URL}/notify-admin`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              congregationNumber,
+              userEmail,
+              adminEmail: data.email,
+            }),
+          });
+
+          // Optional redirect after 5 seconds
           setTimeout(() => {
-            navigate("/login"); // or "/App_page" as needed
+            navigate("/login");
           }, 5000);
         } else {
           setErrorMsg("No admin found for this congregation.");
         }
       } catch {
-        setErrorMsg("Failed to fetch admin email.");
+        setErrorMsg("Failed to fetch admin email or send notification.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAdminEmail();
-  }, [congregationNumber, navigate]);
+    fetchAdminEmailAndNotify();
+  }, [congregationNumber, userEmail, navigate]);
 
   const styles: { [key: string]: React.CSSProperties } = {
     container: {
@@ -118,11 +132,10 @@ const ExistPage = () => {
           ) : (
             <>
               <p style={styles.title}>
-                Thank you for requesting to join Congregation #
-                {congregationNumber}
+                Thank you for requesting to join Congregation #{congregationNumber}
               </p>
               <p style={styles.text}>
-                An email has been sent to the administrator to review your admission. 
+                An email has been sent to the administrator to review your admission.
                 You can also personally contact the admin to speed up the approval.
               </p>
               <a href={`mailto:${adminEmail}`} style={styles.link}>
