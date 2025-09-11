@@ -71,6 +71,7 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
   const congregationNumberNum = Number(congregationNumber);
 
   try {
+    // 1. Check congregation exists
     const congregation = await prisma.congregation.findUnique({
       where: { idCongregation: congregationNumberNum },
     });
@@ -78,14 +79,17 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: "This congregation does not exist." });
     }
 
+    // 2. Check if user already exists in this congregation (by email)
     const existingUser = await prisma.login.findFirst({
-      where: { congregationNumber: congregationNumberNum },
+      where: { congregationNumber: congregationNumberNum, email },
     });
 
     if (existingUser) {
+      // User already exists in this congregation
       return res.status(200).json({ congregationExists: true, existingEmail: existingUser.email });
     }
 
+    // 3. Create user
     await prisma.login.create({
       data: {
         name,
@@ -97,8 +101,13 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
+    // 4. Success
     return res.status(201).json({ congregationExists: false });
-  } catch (error) {
+  } catch (error: any) {
+    // Prisma foreign key error
+    if (error.code === 'P2003') {
+      return res.status(400).json({ error: "Invalid congregation reference." });
+    }
     console.error("Error saving user:", error);
     return res.status(500).json({ error: "Failed to save user." });
   }
