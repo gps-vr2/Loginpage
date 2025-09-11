@@ -65,7 +65,7 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (!congregation) {
-      // Create congregation and user together
+      // Create congregation and user together in a transaction
       if (!congregationName || !language) {
         return res.status(400).json({ error: "Congregation name and language required to create new congregation." });
       }
@@ -79,7 +79,7 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
             email,
             password: hashedPassword,
             whatsapp,
-            congregationNumber: congregationNumberNum,
+            congregationNumber: congregationNumberNum, // must match idCongregation
             googleSignIn: false
           }
         })
