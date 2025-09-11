@@ -74,7 +74,7 @@ const CongregationPage = () => {
 
     try {
       const res = await axios.post(
-        `${API_URL}/Congname`,
+        `${API_URL}/saveuser`,
         {
           name,
           whatsapp,
