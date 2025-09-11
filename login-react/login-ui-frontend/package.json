@@ -3,15 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
+ "scripts": {
+  "dev": "vite",
+  "lint": "eslint .",
+  "preview": "vite preview",
+  "build": "vite build"
+},
   "dependencies": {
     "axios": "^1.11.0",
     "jwt-decode": "^4.0.0",
