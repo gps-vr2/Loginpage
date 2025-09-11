@@ -160,11 +160,18 @@ const CompleteProfilePage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.congregationExists) {
-        navigate("/exist", { state: { congregationNumber: congNum } });
-      } else {
+        // Congregation exists, go to exist page for admin approval
+        navigate("/exist", { state: { congregationNumber: congNum, userEmail: user?.email } });
+      } else if (res.data.created) {
+        // New congregation and user created, go to dashboard or home
+        navigate("/dashboard");
+      } else if (res.data.error === "This congregation does not exist.") {
+        // Congregation does not exist, collect more info
         navigate("/nocong", {
           state: { name, whatsapp, congregationNumber: congNum, email: user?.email },
         });
+      } else {
+        setError("Unexpected response from server.");
       }
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to save profile.");
