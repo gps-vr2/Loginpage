@@ -56,7 +56,11 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(400).json({ error: "Congregation number must be exactly 7 digits." });
   }
 
+  // Ensure congregationNumber is a number and matches schema type
   const congregationNumberNum = Number(congregationNumber);
+  if (isNaN(congregationNumberNum)) {
+    return res.status(400).json({ error: "Congregation number must be numeric." });
+  }
 
   try {
     // 1. Check if congregation exists
@@ -69,6 +73,10 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
       if (!congregationName || !language) {
         return res.status(400).json({ error: "Congregation name and language required to create new congregation." });
       }
+      // Debug log
+      console.log("Creating congregation:", congregationNumberNum, congregationName, language);
+      console.log("Creating user:", name, email, whatsapp, congregationNumberNum);
+
       const [newCongregation, newUser] = await prisma.$transaction([
         prisma.congregation.create({
           data: { idCongregation: congregationNumberNum, name: congregationName, language }
