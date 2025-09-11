@@ -12,10 +12,6 @@ const verificationCodes: { [email: string]: { code: string; expires: number } } 
    Registration / Password
 ============================ */
 
-/**
- * @route POST /api/register
- * @desc Check if email is already in use
- */
 export const registerUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required.' });
@@ -30,10 +26,6 @@ export const registerUser = async (req: AuthenticatedRequest, res: Response) => 
   }
 };
 
-/**
- * @route POST /api/setpassword
- * @desc Sets password for new user and returns temporary token
- */
 export const setPassword = async (req: AuthenticatedRequest, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Missing email or password" });
@@ -50,16 +42,12 @@ export const setPassword = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /* ============================
-   User Creation
+   User Creation & Congregation
 ============================ */
 
-/**
- * @route POST /api/saveuser
- * @desc Saves final user details after verifying registration token
- */
 export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, hashedPassword } = req.user;
-  const { name, whatsapp, congregationNumber } = req.body;
+  const { name, whatsapp, congregationNumber, congregationName, language } = req.body;
 
   if (!name || !whatsapp || !congregationNumber) {
     return res.status(400).json({ error: "Missing required profile fields" });
@@ -71,40 +59,50 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
   const congregationNumberNum = Number(congregationNumber);
 
   try {
-    // 1. Check congregation exists
+    // 1. Check if congregation exists
     const congregation = await prisma.congregation.findUnique({
       where: { idCongregation: congregationNumberNum },
     });
+
     if (!congregation) {
-      return res.status(400).json({ error: "This congregation does not exist." });
+      // Create congregation and user together
+      if (!congregationName || !language) {
+        return res.status(400).json({ error: "Congregation name and language required to create new congregation." });
+      }
+      const [newCongregation, newUser] = await prisma.$transaction([
+        prisma.congregation.create({
+          data: { idCongregation: congregationNumberNum, name: congregationName, language }
+        }),
+        prisma.login.create({
+          data: {
+            name,
+            email,
+            password: hashedPassword,
+            whatsapp,
+            congregationNumber: congregationNumberNum,
+            googleSignIn: false
+          }
+        })
+      ]);
+      // Success: allow login
+      const sessionToken = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+      return res.status(201).json({ created: true, token: sessionToken });
+    } else {
+      // Congregation exists: check if user already exists
+      const existingUser = await prisma.login.findFirst({
+        where: { congregationNumber: congregationNumberNum, email },
+      });
+
+      if (existingUser) {
+        return res.status(200).json({ congregationExists: true, existingEmail: existingUser.email });
+      }
+
+      // TODO: Send notification email to admin here
+      // Example: await sendAdminNotification(congregationNumberNum, email);
+
+      return res.status(200).json({ congregationExists: true, mailSent: true });
     }
-
-    // 2. Check if user already exists in this congregation (by email)
-    const existingUser = await prisma.login.findFirst({
-      where: { congregationNumber: congregationNumberNum, email },
-    });
-
-    if (existingUser) {
-      // User already exists in this congregation
-      return res.status(200).json({ congregationExists: true, existingEmail: existingUser.email });
-    }
-
-    // 3. Create user
-    await prisma.login.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        whatsapp,
-        congregationNumber: congregationNumberNum,
-        googleSignIn: false
-      },
-    });
-
-    // 4. Success
-    return res.status(201).json({ congregationExists: false });
   } catch (error: any) {
-    // Prisma foreign key error
     if (error.code === 'P2003') {
       return res.status(400).json({ error: "Invalid congregation reference." });
     }
@@ -117,10 +115,6 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
    Login
 ============================ */
 
-/**
- * @route POST /api/login
- * @desc Authenticates user and returns JWT
- */
 export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
@@ -272,7 +266,7 @@ export const getUserByCongregation = async (req: AuthenticatedRequest, res: Resp
 };
 
 /* ============================
-   Create Congregation & User
+   Create Congregation & User (legacy)
 ============================ */
 
 export const createCongregationAndUser = async (req: AuthenticatedRequest, res: Response) => {
