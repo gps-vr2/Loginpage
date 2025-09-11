@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
 
-// Dummy lookup function — replace with DB query
+// Replace this with your real DB lookup
 const getAdminEmailByCongregation = (congId) => {
   const mapping = {
     "2898201": "admin1@example.com",
@@ -21,6 +21,10 @@ const transporter = nodemailer.createTransport({
 
 router.post("/notify-admin", async (req, res) => {
   const { congregationNumber, userEmail } = req.body;
+  if (!congregationNumber || !userEmail) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
   const adminEmail = getAdminEmailByCongregation(congregationNumber);
 
   const mailOptions = {
@@ -28,7 +32,7 @@ router.post("/notify-admin", async (req, res) => {
     to: adminEmail,
     subject: `New Account Request for Congregation #${congregationNumber}`,
     html: `
-      <p>User <strong>${userEmail}</strong> has created an account with Congregation <strong>#${congregationNumber}</strong>.</p>
+      <p>User <strong>${userEmail}</strong> has requested to join Congregation <strong>#${congregationNumber}</strong>.</p>
       <p>Please review and approve their access in the admin panel.</p>
     `,
   };
