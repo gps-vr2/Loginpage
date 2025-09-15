@@ -1,7 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["views"]
-  // This line tells Prisma to generate the engine for both your local OS and Vercel's Linux environment
+  // This line tell Prisma to generate the engine for both your local OS and Vercel's Linux environment
   binaryTargets   = ["native", "rhel-openssl-3.0.x"] 
 }
 
