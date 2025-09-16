@@ -42,10 +42,7 @@ const ExistPage = () => {
             }),
           });
 
-          // Optional redirect after 5 seconds
-          setTimeout(() => {
-            navigate("/login");
-          }, 5000);
+          // Do not redirect; keep user on this page
         } else {
           setErrorMsg("No admin found for this congregation.");
         }
@@ -135,15 +132,13 @@ const ExistPage = () => {
                 Thank you for requesting to join Congregation #{congregationNumber}
               </p>
               <p style={styles.text}>
-                An email has been sent to the administrator to review your admission.
-                You can also personally contact the admin to speed up the approval.
+                Your invitation has been sent. You will be notified once the admin accepts your invite.<br/>
+                Please wait for admin approval before logging in.<br/>
+                You can also contact the admin directly:
               </p>
               <a href={`mailto:${adminEmail}`} style={styles.link}>
                 Mail the Admin
               </a>
-              <p style={{ marginTop: "1rem", fontSize: "12px", color: "#6b7280" }}>
-                Redirecting shortly...
-              </p>
             </>
           )}
         </div>

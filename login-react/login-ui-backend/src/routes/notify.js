@@ -51,7 +51,7 @@ router.post("/notify-admin", async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Email sent to admin." });
+  res.status(200).json({ message: "You will be notified once the admin accepts your invite." });
   } catch (error) {
     console.error("Email error:", error);
     res.status(500).json({ message: "Failed to send email." });
