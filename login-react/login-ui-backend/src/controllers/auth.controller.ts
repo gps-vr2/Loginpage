@@ -69,7 +69,7 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (!congregation) {
-      // Create congregation and user together in a transaction
+      // Create congregation and user together in a transaction (sequentially)
       if (!congregationName || !language) {
         return res.status(400).json({ error: "Congregation name and language required to create new congregation." });
       }
@@ -77,11 +77,11 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
       console.log("Creating congregation:", congregationNumberNum, congregationName, language);
       console.log("Creating user:", name, email, whatsapp, congregationNumberNum);
 
-      const [newCongregation, newUser] = await prisma.$transaction([
-        prisma.congregation.create({
+      const result = await prisma.$transaction(async (tx) => {
+        const newCongregation = await tx.congregation.create({
           data: { idCongregation: congregationNumberNum, name: congregationName, language }
-        }),
-        prisma.login.create({
+        });
+        const newUser = await tx.login.create({
           data: {
             name,
             email,
@@ -90,10 +90,16 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
             congregationNumber: congregationNumberNum, // must match idCongregation
             googleSignIn: false
           }
-        })
-      ]);
+        });
+        return { newCongregation, newUser };
+      });
+
       // Success: allow login
-      const sessionToken = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+      const sessionToken = jwt.sign(
+        { id: result.newUser.id, email: result.newUser.email, name: result.newUser.name },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '7d' }
+      );
       return res.status(201).json({ created: true, token: sessionToken });
     } else {
       // Congregation exists: check if user already exists
@@ -293,12 +299,13 @@ export const createCongregationAndUser = async (req: AuthenticatedRequest, res: 
     const existingCongregation = await prisma.congregation.findUnique({ where: { idCongregation: congregationNumberNum } });
     if (existingCongregation) return res.status(409).json({ error: 'A congregation with this number already exists.' });
 
-    const [newCongregation, newUser] = await prisma.$transaction([
-      prisma.congregation.create({ data: { idCongregation: congregationNumberNum, name: congregationName, language } }),
-      prisma.login.create({ data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congregationNumberNum, googleSignIn: false } }),
-    ]);
+    const result = await prisma.$transaction(async (tx) => {
+      const newCongregation = await tx.congregation.create({ data: { idCongregation: congregationNumberNum, name: congregationName, language } });
+      const newUser = await tx.login.create({ data: { name, email, password: hashedPassword, whatsapp, congregationNumber: congregationNumberNum, googleSignIn: false } });
+      return { newCongregation, newUser };
+    });
 
-    const sessionToken = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+    const sessionToken = jwt.sign({ id: result.newUser.id, email: result.newUser.email, name: result.newUser.name }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
 
     return res.status(201).json({ message: 'Congregation and user created successfully.', token: sessionToken });
   } catch (error) {
