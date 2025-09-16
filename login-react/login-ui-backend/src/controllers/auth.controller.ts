@@ -69,9 +69,9 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (!congregation) {
-      // Create congregation and user together in a transaction (sequentially)
+      // If congregationName or language is missing, tell frontend to collect them
       if (!congregationName || !language) {
-        return res.status(400).json({ error: "Congregation name and language required to create new congregation." });
+        return res.status(200).json({ error: "This congregation does not exist." });
       }
       // Debug log
       console.log("Creating congregation:", congregationNumberNum, congregationName, language);
