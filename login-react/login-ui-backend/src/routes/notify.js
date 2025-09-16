@@ -2,18 +2,22 @@ const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db').default;
 
 // Fetch the admin email for a congregation from the Login table
 const getAdminEmailByCongregation = async (congId) => {
-  // If you have a 'role' field, use: where: { congregationNumber: Number(congId), role: 'admin' }
-  // Otherwise, just get the first user for that congregation
-  const admin = await prisma.login.findFirst({
-    where: { congregationNumber: Number(congId) },
-    orderBy: { createdAt: 'asc' }, // oldest user, likely admin
-  });
-  return admin ? admin.email : null;
+  try {
+    // If you have a 'role' field, use: where: { congregationNumber: Number(congId), role: 'admin' }
+    // Otherwise, just get the first user for that congregation
+    const admin = await prisma.login.findFirst({
+      where: { congregationNumber: Number(congId) },
+      orderBy: { createdAt: 'asc' }, // oldest user, likely admin
+    });
+    return admin ? admin.email : null;
+  } catch (err) {
+    console.error('Error fetching admin email:', err);
+    return null;
+  }
 };
 
 const transporter = nodemailer.createTransport({
