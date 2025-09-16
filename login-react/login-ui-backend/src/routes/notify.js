@@ -2,13 +2,18 @@ const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
 
-// Replace this with your real DB lookup
-const getAdminEmailByCongregation = (congId) => {
-  const mapping = {
-    "2898201": "admin1@example.com",
-    "1234567": "admin2@example.com",
-  };
-  return mapping[congId] || "defaultadmin@example.com";
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+// Fetch the admin email for a congregation from the Login table
+const getAdminEmailByCongregation = async (congId) => {
+  // If you have a 'role' field, use: where: { congregationNumber: Number(congId), role: 'admin' }
+  // Otherwise, just get the first user for that congregation
+  const admin = await prisma.login.findFirst({
+    where: { congregationNumber: Number(congId) },
+    orderBy: { createdAt: 'asc' }, // oldest user, likely admin
+  });
+  return admin ? admin.email : null;
 };
 
 const transporter = nodemailer.createTransport({
@@ -25,19 +30,22 @@ router.post("/notify-admin", async (req, res) => {
     return res.status(400).json({ message: "Missing required fields." });
   }
 
-  const adminEmail = getAdminEmailByCongregation(congregationNumber);
-
-  const mailOptions = {
-    from: process.env.ADMIN_EMAIL,
-    to: adminEmail,
-    subject: `New Account Request for Congregation #${congregationNumber}`,
-    html: `
-      <p>User <strong>${userEmail}</strong> has requested to join Congregation <strong>#${congregationNumber}</strong>.</p>
-      <p>Please review and approve their access in the admin panel.</p>
-    `,
-  };
-
   try {
+    const adminEmail = await getAdminEmailByCongregation(congregationNumber);
+    if (!adminEmail) {
+      return res.status(404).json({ message: "No admin found for this congregation." });
+    }
+
+    const mailOptions = {
+      from: process.env.ADMIN_EMAIL,
+      to: adminEmail,
+      subject: `New Account Request for Congregation #${congregationNumber}`,
+      html: `
+        <p>User <strong>${userEmail}</strong> has requested to join Congregation <strong>#${congregationNumber}</strong>.</p>
+        <p>Please review and approve their access in the admin panel.</p>
+      `,
+    };
+
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "Email sent to admin." });
   } catch (error) {
