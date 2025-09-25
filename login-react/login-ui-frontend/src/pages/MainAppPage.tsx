@@ -10,6 +10,7 @@ const MainAppPage = () => {
   const { user, token, logout } = useAuth();
 
   const [congNumber, setCongNumber] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,17 @@ const MainAppPage = () => {
         console.error("Failed to fetch user details", err);
       }
     };
+
+    // Check if user is admin from token
+    try {
+      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      if (payload?.isAdmin) {
+        setIsAdmin(true);
+      }
+    } catch (err) {
+      console.error("Failed to decode token", err);
+    }
+
     fetchUserDetails();
   }, [token]);
 
@@ -45,11 +57,15 @@ const MainAppPage = () => {
     if (link) window.location.href = link;
   };
 
+  const handleAdminPanel = () => {
+    navigate("/admin");
+  };
+
   const appList = [
     { img: "/logo_app1.png", title: "APP1 - DESC", link: "https://gpsapp1.vercel.app/" },
     { img: "/logo_app2.png", title: "APP2 - DESC", link: "https://gp-sapp2.vercel.app" },
     { img: "/logo1.png", title: "APP3 - DESC" },
-    { img: "/admin.png", title: "ADMIN LOGIN" },
+    ...(isAdmin ? [{ img: "/admin.png", title: "ADMIN PANEL", action: handleAdminPanel }] : [{ img: "/admin.png", title: "ADMIN LOGIN" }]),
   ];
 
   // Shared header JSX so mobile & desktop see exactly the same greeting
@@ -67,7 +83,7 @@ const MainAppPage = () => {
           fontSize: isMobile ? 18 : dStyles.title.fontSize,
         }}
       >
-        Welcome, {user?.name}
+        Welcome, {user?.name} {isAdmin && <span style={dStyles.adminBadge}>(Admin)</span>}
       </h2>
       <p
         style={{
@@ -101,10 +117,10 @@ const MainAppPage = () => {
                 <button
                   style={{
                     ...mStyles.launchBtn,
-                    backgroundColor: app.link ? "#7064e5" : "#bbb",
+                    backgroundColor: app.link || app.action ? "#7064e5" : "#bbb",
                   }}
-                  disabled={!app.link}
-                  onClick={() => handleLaunch(app.link)}
+                  disabled={!app.link && !app.action}
+                  onClick={() => app.action ? app.action() : handleLaunch(app.link)}
                 >
                   Launch
                 </button>
@@ -135,10 +151,10 @@ const MainAppPage = () => {
                     <button
                       style={{
                         ...dStyles.launchBtn,
-                        backgroundColor: app.link ? "#7064e5" : "#bbb",
+                        backgroundColor: app.link || app.action ? "#7064e5" : "#bbb",
                       }}
-                      disabled={!app.link}
-                      onClick={() => handleLaunch(app.link)}
+                      disabled={!app.link && !app.action}
+                      onClick={() => app.action ? app.action() : handleLaunch(app.link)}
                     >
                       Launch
                     </button>
@@ -255,6 +271,15 @@ const dStyles: { [key: string]: React.CSSProperties } = {
   title: { fontSize: 22, fontWeight: 700, marginBottom: 6, color: "#1f1f1f" },
   subText: { fontSize: 13, color: "#555" },
   highlight: { color: "#5e5ccf", fontWeight: 600 },
+  adminBadge: { 
+    background: "#4CAF50", 
+    color: "white", 
+    padding: "2px 8px", 
+    borderRadius: "12px", 
+    fontSize: "10px", 
+    fontWeight: "600",
+    marginLeft: "8px"
+  },
   appList: { display: "flex", flexDirection: "column", gap: 18 },
   appBox: {
     display: "flex",

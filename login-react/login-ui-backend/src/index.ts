@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import passport from 'passport';
 import authRoutes from './routes/auth.routes';
 import notifyRouter from './routes/notify';
+import adminRoutes from './routes/admin.routes';
 
 // This line executes the passport configuration
 import './config/passport'; 
@@ -23,6 +24,7 @@ app.use(passport.initialize());
 // API Routes
 app.use('/api', authRoutes); 
 app.use('/api', notifyRouter);
+app.use('/api/admin', adminRoutes);
 
 // Health check route
 app.get('/api/health', (req: Request, res: Response) => {

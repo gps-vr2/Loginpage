@@ -46,3 +46,43 @@ export const sendVerificationCode = async (to: string, code: string) => {
     throw new Error('Failed to send verification email.');
   }
 };
+
+/**
+ * Sends an invite approval notification to the user.
+ * @param to The recipient's email address.
+ * @param name The user's name.
+ * @param congregationNumber The congregation number.
+ */
+export const sendInviteApprovedEmail = async (to: string, name: string, congregationNumber: number) => {
+  const mailOptions = {
+    from: `"Congregation Portal" <${GMAIL_USER}>`,
+    to: to,
+    subject: 'Your Invitation Has Been Approved!',
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4CAF50;">Welcome to Congregation #${congregationNumber}!</h2>
+        <p>Dear ${name},</p>
+        <p>Great news! Your invitation to join Congregation #${congregationNumber} has been approved by the administrator.</p>
+        <p>You can now log in to your account using your email and password.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL || 'https://www.j7w.org'}/login" 
+             style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Login Now
+          </a>
+        </div>
+        <p>If you have any questions, please contact your congregation administrator.</p>
+        <p>Welcome aboard!</p>
+        <hr style="margin: 30px 0;">
+        <p style="color: #888; font-size: 12px;">This is an automated email. Please do not reply.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Invite approval email sent successfully to', to);
+  } catch (error) {
+    console.error('Error sending invite approval email:', error);
+    throw new Error('Failed to send invite approval email.');
+  }
+};

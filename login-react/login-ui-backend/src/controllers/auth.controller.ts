@@ -69,13 +69,13 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (!congregation) {
-      // If congregationName or language is missing, tell frontend to collect them
+      // New congregation - user becomes admin
       if (!congregationName || !language) {
         return res.status(200).json({ error: "This congregation does not exist." });
       }
-      // Debug log
+      
       console.log("Creating congregation:", congregationNumberNum, congregationName, language);
-      console.log("Creating user:", name, email, whatsapp, congregationNumberNum);
+      console.log("Creating user as admin:", name, email, whatsapp, congregationNumberNum);
 
       const result = await prisma.$transaction(async (tx) => {
         const newCongregation = await tx.congregation.create({
@@ -87,22 +87,23 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
             email,
             password: hashedPassword,
             whatsapp,
-            congregationNumber: congregationNumberNum, // must match idCongregation
+            congregationNumber: congregationNumberNum,
+            isAdmin: true, // First user becomes admin
             googleSignIn: false
           }
         });
         return { newCongregation, newUser };
       });
 
-      // Success: allow login
+      // Success: allow login immediately for admin
       const sessionToken = jwt.sign(
-        { id: result.newUser.id, email: result.newUser.email, name: result.newUser.name },
+        { id: result.newUser.id, email: result.newUser.email, name: result.newUser.name, isAdmin: true },
         process.env.JWT_SECRET as string,
         { expiresIn: '7d' }
       );
       return res.status(201).json({ created: true, token: sessionToken });
     } else {
-      // Congregation exists: check if user already exists
+      // Congregation exists - check if user already exists
       const existingUser = await prisma.login.findFirst({
         where: { congregationNumber: congregationNumberNum, email },
       });
@@ -111,10 +112,37 @@ export const saveUser = async (req: AuthenticatedRequest, res: Response) => {
         return res.status(200).json({ congregationExists: true, existingEmail: existingUser.email });
       }
 
-      // TODO: Send notification email to admin here
-      // Example: await sendAdminNotification(congregationNumberNum, email);
+      // Check if there's already a pending invite
+      const existingInvite = await prisma.invite.findFirst({
+        where: { congregationNumber: congregationNumberNum, email },
+      });
 
-      return res.status(200).json({ congregationExists: true, mailSent: true });
+      if (existingInvite) {
+        return res.status(200).json({ 
+          congregationExists: true, 
+          inviteStatus: existingInvite.status,
+          message: existingInvite.status === 'pending' ? 
+            'Your invite is pending admin approval.' : 
+            `Your previous invite was ${existingInvite.status}.`
+        });
+      }
+
+      // Create new invite for admin approval
+      await prisma.invite.create({
+        data: {
+          name,
+          email,
+          whatsapp,
+          congregationNumber: congregationNumberNum,
+          status: 'pending'
+        }
+      });
+
+      return res.status(200).json({ 
+        congregationExists: true, 
+        inviteCreated: true,
+        message: "Invite sent to admin for approval."
+      });
     }
   } catch (error: any) {
     if (error.code === 'P2003') {
@@ -134,7 +162,18 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
   try {
-    const user = await prisma.login.findUnique({ where: { email: email.toLowerCase() } });
+    const user = await prisma.login.findUnique({ 
+      where: { email: email.toLowerCase() },
+      select: { 
+        id: true, 
+        email: true, 
+        name: true, 
+        password: true, 
+        isAdmin: true,
+        loginCount: true 
+      }
+    });
+    
     if (!user || !user.password) return res.status(401).json({ error: 'Invalid email or password' });
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -146,12 +185,16 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     const sessionToken = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin },
       process.env.JWT_SECRET as string,
       { expiresIn: '7d' }
     );
 
-    return res.status(200).json({ token: sessionToken, lastLoginDate: updatedUser.updatedAt });
+    return res.status(200).json({ 
+      token: sessionToken, 
+      lastLoginDate: updatedUser.updatedAt,
+      isAdmin: user.isAdmin
+    });
   } catch (error) {
     console.error('Login failed:', error);
     return res.status(500).json({ error: 'Internal server error' });

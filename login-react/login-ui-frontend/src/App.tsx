@@ -7,6 +7,7 @@ import SetPasswordPage from "./pages/SetPasswordPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import MainAppPage from "./pages/MainAppPage";
+import AdminPanelPage from "./pages/AdminPanelPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerificationPage from "./pages/VerificationPage";
@@ -44,6 +45,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route path="App_page" element={<MainAppPage />} />
+            <Route path="admin" element={<AdminPanelPage />} />
             <Route path="complete-profile" element={<CompleteProfilePage />} />
             <Route path="exist" element={<ExistPage />} />
             <Route path="nocong" element={<NoCongregationPage />} />
@@ -53,5 +55,3 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;
