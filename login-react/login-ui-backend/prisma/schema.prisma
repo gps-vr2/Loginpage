@@ -1,8 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["views"]
-  // This line tell Prisma to generate the engine for both your local OS and Vercel's Linux environment
-  binaryTargets   = ["native", "rhel-openssl-3.0.x"] 
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -11,13 +10,13 @@ datasource db {
 }
 
 model Building {
-  idBuilding    Int       @id @default(autoincrement()) @db.UnsignedInt
-  lat           Float     @db.Float
-  long          Float     @db.Float
-  territory_id  Int?      @db.UnsignedMediumInt
-  last_modified DateTime  @default(now()) @db.Timestamp(0)
-  address       String?   @db.VarChar(255)
-  updatedAt     DateTime? @db.Timestamp(0)
+  idBuilding    Int        @id @default(autoincrement()) @db.UnsignedInt
+  lat           Float      @db.Float
+  long          Float      @db.Float
+  territory_id  Int?       @db.UnsignedMediumInt
+  last_modified DateTime   @default(now()) @db.Timestamp(0)
+  address       String?    @db.VarChar(255)
+  updatedAt     DateTime?  @db.Timestamp(0)
   Territory     Territory? @relation(fields: [territory_id], references: [idTerritory], onDelete: Cascade, map: "idTerritory")
   Door          Door[]
 
@@ -31,11 +30,11 @@ model Congregation {
   createdAt      DateTime    @default(now()) @db.Timestamp(0)
   updatedAt      DateTime?   @updatedAt @db.Timestamp(0)
   Door           Door[]
+  Invite         Invite[]
   Language       Language[]
   Login          Login[]
   Publisher      Publisher[]
   Territory      Territory[]
-  Invite         Invite[]
 }
 
 model Door {
@@ -127,11 +126,11 @@ model Invite {
   email              String       @db.VarChar(150)
   whatsapp           String       @db.VarChar(20)
   congregationNumber Int          @db.UnsignedMediumInt
-  status             String       @default("pending") @db.VarChar(20) // "pending", "approved", "rejected"
+  status             String       @default("pending") @db.VarChar(20)
   createdAt          DateTime     @default(now()) @db.Timestamp(0)
   updatedAt          DateTime     @updatedAt
   Congregation       Congregation @relation(fields: [congregationNumber], references: [idCongregation], onDelete: Cascade, onUpdate: NoAction, map: "InviteToCongregation")
 
   @@index([congregationNumber], map: "Invite_cong_idx")
-  @@index([email], map: "Invite_email_idx")
+  @@index([email])
 }

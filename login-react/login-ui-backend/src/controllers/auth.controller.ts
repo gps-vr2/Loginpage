@@ -208,7 +208,7 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
   const { user, isNewUser } = req.user;
   const token = jwt.sign(
-    { id: user.id, email: user.email, name: user.name },
+    { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin || false },
     process.env.JWT_SECRET as string,
     { expiresIn: isNewUser ? '1h' : '7d' }
   );
@@ -291,7 +291,7 @@ export const getUser = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user.id;
     const user = await prisma.login.findUnique({
       where: { id: userId },
-      select: { name: true, congregationNumber: true },
+      select: { name: true, congregationNumber: true, isAdmin: true },
     });
     if (!user) return res.status(404).json({ error: 'User not found.' });
     return res.status(200).json(user);
