@@ -14,10 +14,17 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log('Google OAuth Profile:', {
+          id: profile.id,
+          displayName: profile.displayName,
+          emails: profile.emails
+        });
+
         const email = profile.emails?.[0]?.value;
         const name = profile.displayName;
 
         if (!email) {
+          console.error('Google account email not found');
           return done(new Error("Google account email not found"), false);
         }
 
@@ -34,14 +41,17 @@ passport.use(
         });
 
         if (existingUser) {
+          console.log('Existing user found:', { id: existingUser.id, email: existingUser.email, isAdmin: existingUser.isAdmin });
           // If user exists, pass them along. This is a login.
-          return done(null, existingUser as Express.User);
+          return done(null, existingUser as any);
         } else {
+          console.log('New user detected, passing to registration:', { email, name });
           // If user does not exist, this is a new registration.
           // Pass the profile info to the next step.
           return done(null, { email, name, isNewUser: true } as any);
         }
       } catch (error) {
+        console.error('Error in Google OAuth strategy:', error);
         return done(error, false);
       }
     }
