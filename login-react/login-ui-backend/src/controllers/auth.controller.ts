@@ -206,15 +206,41 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
 ============================ */
 
 export const googleCallback = async (req: AuthenticatedRequest, res: Response) => {
-  const { user, isNewUser } = req.user;
-  const token = jwt.sign(
-    { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin || false },
-    process.env.JWT_SECRET as string,
-    { expiresIn: isNewUser ? '1h' : '7d' }
-  );
+  try {
+    const userData = req.user as any;
+    console.log('Google callback received user data:', userData);
 
-  const frontendUrl = process.env.FRONTEND_URL || 'https://www.j7w.org';
-  res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
+    // Handle both existing users and new users
+    let user, isNewUser;
+    
+    if (userData.isNewUser) {
+      // New user case - userData contains { email, name, isNewUser: true }
+      user = userData;
+      isNewUser = true;
+    } else {
+      // Existing user case - userData is the user object itself
+      user = userData;
+      isNewUser = false;
+    }
+
+    const token = jwt.sign(
+      { 
+        id: user.id || 0, 
+        email: user.email, 
+        name: user.name, 
+        isAdmin: user.isAdmin || false 
+      },
+      process.env.JWT_SECRET as string,
+      { expiresIn: isNewUser ? '1h' : '7d' }
+    );
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.j7w.org';
+    res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.j7w.org';
+    res.redirect(`${frontendUrl}/auth/error?message=Authentication failed`);
+  }
 };
 
 /* ============================
